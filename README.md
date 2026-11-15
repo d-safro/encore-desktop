@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo.svg" width="128" alt="Encore logo: a record whose label is a lowercase e"></p>
+
 # Encore
 
 A music player for Android that plays your **Navidrome** (or any Subsonic / OpenSubsonic) library. Dark,
