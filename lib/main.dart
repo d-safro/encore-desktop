@@ -29,6 +29,8 @@ Future<void> main() async {
   final container = ProviderContainer();
   await container.read(accountProvider.future); // the player needs the server before restoring the queue
   container.read(downloadsProvider); // start listening for finished downloads
+  // the player rebuilds the saved queue from these: downloaded songs must play from the phone, not the server
+  await container.read(downloadsProvider.notifier).loaded.timeout(const Duration(seconds: 10), onTimeout: () {});
   FileDownloader().start(autoCleanDatabase: true); // after the listener: picks up downloads finished while closed
 
   audioHandler = await AudioService.init(
