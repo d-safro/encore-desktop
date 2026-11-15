@@ -10,6 +10,7 @@ import 'app.dart';
 import 'core/settings.dart';
 import 'data/account.dart';
 import 'data/db.dart';
+import 'data/jam.dart';
 import 'data/library.dart';
 import 'playback/handler.dart';
 import 'playback/widget_sync.dart';
@@ -43,6 +44,7 @@ Future<void> main() async {
   );
 
   startWidgetSync(audioHandler);
+  container.read(jamProvider); // picks up a Jam that was running when the app closed
 
   playerNotices.stream.listen((m) {
     messengerKey.currentState
