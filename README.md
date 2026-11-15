@@ -52,6 +52,9 @@ in Android's encrypted storage and requests use salted tokens.
   and Bluetooth settings.
 
 **Song radio and discovery**
+- Smart shuffle (like Spotify's): tap shuffle twice. It shuffles the list and mixes in a song that fits about
+  every three songs, marked ✦; keep one with ⊕ (saved to that playlist or your liked songs) or drop it with ⊖
+  and it won't be suggested for that list again. Shuffle buttons on pages remember which kind you used last.
 - Song radio from any song: the song, then songs that sound like it, and it keeps going as you listen.
 - "New to you": songs in your library you've never played that match your taste.
 - Discovery rows and "More like this, not in your library": songs you don't have, picked from what you play;
