@@ -30,26 +30,39 @@ in Android's encrypted storage and requests use salted tokens.
 - Home: greeting, quick pills (shuffle all, liked songs, made for you, continue from another device),
   "Jump back in", recently added, most played, favourites, something different, top rated, your playlists
   (choose and order the sections).
+- Library: Liked songs pinned on top like a playlist, plus your own pinned playlists and albums (long-press → Pin).
 - Library tabs: playlists, albums (grid or list, sort orders, endless scrolling), artists, songs, liked songs,
   genres; folder browsing; internet radio stations from the server.
-- Album, artist (popular songs, albums, albums you don't have, biography, similar and sound-alike artists),
-  playlist and genre pages.
-- Search across the server with recent searches; "Not in your library" results kept separate.
+- Artist pages like Spotify's: fans, their top 10 (yours or ⬇), the whole discography (albums, singles & EPs,
+  compilations; ⬇ for what you don't have), a bio (your server's, else Wikipedia), similar and sound-alike artists.
+- Album, playlist and genre pages; share links (song.link) that open in any music app.
+- Search across the server; recent searches remember the songs, albums and artists you opened.
 
 **Playback**
 - Background playback, media notification, lock screen, Bluetooth / headset buttons, home-screen widget,
-  Android Auto (browse, voice search, resume).
+  Android Auto (Home / Playlists / Albums / Radio tabs, smart shuffle button, voice search, resume). Android
+  Auto hides apps not installed from the Play Store until you allow "Unknown sources" in its developer settings
+  (tap the version in Android Auto's settings 10 times).
+- Exact play / pause / position reported to the server (OpenSubsonic playbackReport), so "now playing" in other
+  apps and Discord-status tools is right.
 - Gapless queue: play now / next / last, drag to reorder, swipe to remove, save as playlist; restored after a
   restart and kept on the server (continue in another app or device).
 - Shuffle, repeat, speed and pitch, skip silence, sleep timer (minutes or end of song).
 - ReplayGain (track / album / automatic, pre-amp, peak protection), 5-band equalizer with presets.
-- Synced lyrics (tap a line to jump), plain lyrics, optional online lyrics from LRCLIB.
+- Synced lyrics (tap a line to jump), plain lyrics; online from LRCLIB, NetEase and lyrics.ovh (order and
+  sources in Settings), and "Wrong lyrics?" to pick another match.
+- Internet radio: find stations in the Radio Browser directory or paste an address; shows the song playing.
 - Full-screen player coloured from the album art; swipe the cover to skip, double-tap to heart.
 
 **Sound and devices**
 - One panel for output device (switch to Bluetooth / speakers with Android's output picker), system volume,
   speed, pitch, equalizer, loudness, skip silence, and shortcuts to Android's mono-audio / left-right balance
   and Bluetooth settings.
+
+**Jam (like Spotify Jam)**
+- Start a Jam and share the link or QR code: friends search your library (and songs you don't have, which
+  download first) and add, reorder, remove or skip from their phone's browser. Needs the server extras and a
+  public address for the Jam page (Tailscale Funnel or similar).
 
 **Song radio and discovery**
 - Smart shuffle (like Spotify's): tap shuffle twice. It shuffles the list and mixes in a song that fits about
@@ -68,6 +81,7 @@ in Android's encrypted storage and requests use salted tokens.
 - Switch on download for an album, playlist, your liked songs, or the whole library (with a size estimate);
   new songs added to them download too. Or download single songs.
 - Original quality or converted, Wi-Fi only option; downloaded copies play first and work offline.
+- No duplicates: the same recording that's in your library twice is stored once.
 - Offline mode: the whole library index is kept on the phone for browsing and search; plays made offline are
   scrobbled later.
 
@@ -88,6 +102,7 @@ The rest needs a small companion service in front of Navidrome, **music-lookup**
 self-hosted media stack (not published yet):
 
 - `getDiscoveries` / `getSongDiscoveries` and ⬇ results for music you don't have, fetched on request.
+- `jamStart` / `jamState` / `jamPoll` / `jamEnd` and the public Jam page.
 - `/rest/audiomuse/*`: a pass-through to [AudioMuse-AI](https://github.com/NeptuneHub/AudioMuse-AI) for the AI
   features. Song radio and sound-alike artists also use Navidrome's own AudioMuse plugin
   (`getSonicSimilarTracks`) and fall back to `getSimilarSongs2` without it.
@@ -131,4 +146,6 @@ android/app/src/main/kotlin   audio-device channel, home-screen widget
 ## Credits
 
 Font: [Inter](https://rsms.me/inter/) by Rasmus Andersson, SIL Open Font License 1.1 (`assets/fonts/OFL.txt`).
-Lyrics: [LRCLIB](https://lrclib.net). Cover search: iTunes Search API, Deezer API.
+Lyrics: [LRCLIB](https://lrclib.net), NetEase Cloud Music, [lyrics.ovh](https://lyrics.ovh).
+Covers, artist pages and share links: iTunes Search API, Deezer API, [Odesli / song.link](https://odesli.co),
+Wikipedia. Radio stations: [Radio Browser](https://www.radio-browser.info).
