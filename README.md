@@ -62,8 +62,8 @@ in Android's encrypted storage and requests use salted tokens.
 **Podcasts**
 - A Podcasts tab: follow shows (search Apple's podcast directory or paste a feed), see new episodes on Home,
   resume where you stopped (kept on the server, so it carries over to other apps), mark played, show notes,
-  download episodes to the phone. Needs the server extras (music-lookup's podcast support), which also keep
-  the newest episodes of each show downloaded on the server.
+  download episodes to the phone (or save them on the server). A notification when a show you follow has a new
+  episode (checked about hourly). Needs the server extras (music-lookup's podcast support).
 
 **Jam (like Spotify Jam)**
 - Start a Jam and share the link or QR code: friends search your library (and songs you don't have, which
@@ -88,8 +88,9 @@ in Android's encrypted storage and requests use salted tokens.
   new songs added to them download too. Or download single songs.
 - Original quality or converted, Wi-Fi only option; downloaded copies play first and work offline.
 - No duplicates: the same recording that's in your library twice is stored once.
-- Offline mode: the whole library index is kept on the phone for browsing and search; plays made offline are
-  scrobbled later.
+- Offline mode: the whole library index is kept on the phone (refreshed every 12 hours) for browsing and
+  search; plays made offline are scrobbled later. When the server can't be reached (Tailscale off, the server
+  asleep) the app notices within seconds and keeps working with what's on the phone.
 
 **Covers**
 - Missing album art is found online (iTunes, then Deezer), and artist pictures from Deezer. Can be switched off.
