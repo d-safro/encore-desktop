@@ -59,6 +59,12 @@ in Android's encrypted storage and requests use salted tokens.
   speed, pitch, equalizer, loudness, skip silence, and shortcuts to Android's mono-audio / left-right balance
   and Bluetooth settings.
 
+**Podcasts**
+- A Podcasts tab: follow shows (search Apple's podcast directory or paste a feed), see new episodes on Home,
+  resume where you stopped (kept on the server, so it carries over to other apps), mark played, show notes,
+  download episodes to the phone. Needs the server extras (music-lookup's podcast support), which also keep
+  the newest episodes of each show downloaded on the server.
+
 **Jam (like Spotify Jam)**
 - Start a Jam and share the link or QR code: friends search your library (and songs you don't have, which
   download first) and add, reorder, remove or skip from their phone's browser. Needs the server extras and a
@@ -103,6 +109,8 @@ self-hosted media stack (not published yet):
 
 - `getDiscoveries` / `getSongDiscoveries` and ⬇ results for music you don't have, fetched on request.
 - `jamStart` / `jamState` / `jamPoll` / `jamEnd` and the public Jam page.
+- The Subsonic podcast API (`getPodcasts`, `getNewestPodcasts`, `createPodcastChannel`…, bookmarks for where you
+  stopped, `setPodcastProgress`), which Navidrome itself doesn't have.
 - `/rest/audiomuse/*`: a pass-through to [AudioMuse-AI](https://github.com/NeptuneHub/AudioMuse-AI) for the AI
   features. Song radio and sound-alike artists also use Navidrome's own AudioMuse plugin
   (`getSonicSimilarTracks`) and fall back to `getSimilarSongs2` without it.
