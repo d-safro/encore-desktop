@@ -9,6 +9,7 @@ import 'data/account.dart';
 import 'data/db.dart';
 import 'data/library.dart';
 import 'playback/handler.dart';
+import 'playback/widget_sync.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +31,8 @@ Future<void> main() async {
       preloadArtwork: true,
     ),
   );
+
+  startWidgetSync(audioHandler);
 
   runApp(UncontrolledProviderScope(container: container, child: const EncoreApp()));
 }
