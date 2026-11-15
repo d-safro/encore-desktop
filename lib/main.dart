@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 import 'core/settings.dart';
 import 'data/account.dart';
+import 'data/cover_cache.dart';
 import 'data/db.dart';
 import 'data/jam.dart';
 import 'data/library.dart';
@@ -54,4 +55,8 @@ Future<void> main() async {
       ..showSnackBar(SnackBar(content: Text(m), behavior: SnackBarBehavior.floating));
   });
   runApp(UncontrolledProviderScope(container: container, child: const EncoreApp()));
+  // later, and only while the server answers: covers are fetched again as you browse
+  Future.delayed(const Duration(seconds: 30), () {
+    if (!container.read(offlineProvider)) dropOldCoverCache(prefs);
+  });
 }
