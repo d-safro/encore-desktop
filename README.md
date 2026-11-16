@@ -24,7 +24,11 @@ Every release is signed with the same key, so new versions install over old ones
 `SHA256SUMS.txt` in each release lets you check the download.
 
 Sign in with your server address (e.g. `https://music.example.com`), user name and password. The password stays
-in Android's encrypted storage and requests use salted tokens.
+in Android's encrypted storage and requests use salted tokens. Add more servers in Settings; each keeps its own
+downloads, queue and pins.
+
+Encore checks GitHub for new versions (about twice a day, can be switched off) and offers to install them; the
+download is checked against the release's `SHA256SUMS.txt`. Android asks once to let Encore install updates.
 
 ## Features
 
@@ -39,6 +43,11 @@ in Android's encrypted storage and requests use salted tokens.
   compilations; ⬇ for what you don't have), a bio (your server's, else Wikipedia), similar and sound-alike artists.
 - Album, playlist and genre pages; share links (song.link) that open in any music app.
 - Search across the server; recent searches remember the songs, albums and artists you opened.
+- Your listening: minutes, plays, top artists / songs / albums and when you listen, by week, month, year or
+  all time (needs the server extras).
+- Smart playlists (Navidrome's own, so every app sees them): one-tap presets like "Forgotten favourites" and
+  "On repeat", or your own rules.
+- Folders: your real folders on disk (with the server extras), else Navidrome's artist / album view.
 
 **Playback**
 - Background playback, media notification, lock screen, Bluetooth / headset buttons, home-screen widget,
@@ -50,6 +59,9 @@ in Android's encrypted storage and requests use salted tokens.
 - Gapless queue: play now / next / last, drag to reorder, swipe to remove, save as playlist; restored after a
   restart and kept on the server (continue in another app or device).
 - Shuffle, repeat, speed and pitch, skip silence, sleep timer (minutes or end of song).
+- Crossfade (up to 12 s); albums played in order stay seamless unless you choose otherwise.
+- Cast to Chromecast / Google Cast speakers and TVs on your Wi-Fi. The phone stays the remote and passes
+  the music along, so it works even when the speaker can't reach your server (e.g. a Tailscale-only server).
 - ReplayGain (track / album / automatic, pre-amp, peak protection), 5-band equalizer with presets.
 - Synced lyrics (tap a line to jump), plain lyrics; online from LRCLIB, NetEase and lyrics.ovh (order and
   sources in Settings), and "Wrong lyrics?" to pick another match.
@@ -101,6 +113,8 @@ in Android's encrypted storage and requests use salted tokens.
 - Hearts, 1–5 star ratings, playlists (create, add, rename, reorder, remove, delete), scrobbling.
 
 **Look**
+- Choose the app icon: Encore's, a line style that matches icon packs like Arcticons, or the original.
+- Phones, tablets and landscape: a side rail and a side-by-side player on wide screens.
 - Inter type, near-black surfaces, colour from your wallpaper (Material You), the playing album's art, or a
   colour you pick; pure black option for OLED.
 
