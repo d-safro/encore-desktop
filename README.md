@@ -100,7 +100,10 @@ download is checked against the release's `SHA256SUMS.txt`. Android asks once to
 **Downloads (like Spotify's download switch)**
 - Switch on download for an album, playlist, your liked songs, or the whole library (with a size estimate);
   new songs added to them download too. Or download single songs.
-- Original quality or converted, Wi-Fi only option; downloaded copies play first and work offline.
+- Download quality like Spotify's: Low, Normal, High (the default, about 72 MB an hour) or Very high, made
+  smaller as Opus on your server, or Lossless (the original files). Changing it offers to shrink songs already
+  downloaded; each keeps playing from the phone until its smaller copy has arrived. Wi-Fi only option;
+  downloaded copies play first and work offline.
 - No duplicates: the same recording that's in your library twice is stored once.
 - Offline mode: the whole library index is kept on the phone (refreshed every 12 hours) for browsing and
   search; plays made offline are scrobbled later. When the server can't be reached (Tailscale off, the server
