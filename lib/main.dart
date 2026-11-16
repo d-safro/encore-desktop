@@ -25,7 +25,7 @@ Future<void> main() async {
     return true;
   };
   prefs = await SharedPreferences.getInstance();
-  libraryDb = await LibraryDb.open();
+  libraryDb = await LibraryDb.open(file: await currentDbFile()); // each server has its own copy
 
   final container = ProviderContainer();
   await container.read(accountProvider.future); // the player needs the server before restoring the queue
