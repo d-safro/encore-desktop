@@ -32,7 +32,11 @@ Future<void> main() async {
   container.read(downloadsProvider); // start listening for finished downloads
   // the player rebuilds the saved queue from these: downloaded songs must play from the phone, not the server
   await container.read(downloadsProvider.notifier).loaded.timeout(const Duration(seconds: 10), onTimeout: () {});
-  FileDownloader().start(autoCleanDatabase: true); // after the listener: picks up downloads finished while closed
+  // after the listener: picks up songs made smaller while closed (song downloads are Encore's own: see
+  // DownloadsNotifier; ones an older version left with Android move over)
+  FileDownloader()
+      .start(autoCleanDatabase: true, doRescheduleKilledTasks: false)
+      .then((_) => container.read(downloadsProvider.notifier).adoptOldDownloads());
 
   audioHandler = await AudioService.init(
     builder: () => EncoreAudioHandler(container),

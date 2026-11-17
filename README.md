@@ -105,6 +105,12 @@ download is checked against the release's `SHA256SUMS.txt`. Android asks once to
   downloaded; each keeps playing from the phone until its smaller copy has arrived. Wi-Fi only option;
   downloaded copies play first and work offline.
 - No duplicates: the same recording that's in your library twice is stored once.
+- Downloads never start over: a song that stops part-way (no signal, the app closed, the phone restarted)
+  carries on from the byte it reached once the app is open and the server can be reached, and nothing you
+  asked for is forgotten. Downloads keep going in the background, with a quiet "Downloading" notification.
+- Copy music over a USB cable: plug the phone (USB debugging on) into the computer that runs your server and
+  run `tools/encore-usb.sh` there. Downloads then go through the cable, without Wi-Fi or internet; Settings ›
+  Downloads › Copy all fetches the whole library. Unplug any time: it carries on over the network.
 - Offline mode: the whole library index is kept on the phone (refreshed every 12 hours) for browsing and
   search; plays made offline are scrobbled later. When the server can't be reached (Tailscale off, the server
   asleep) the app notices within seconds and keeps working with what's on the phone.
@@ -168,7 +174,8 @@ lib/
   playback/                   the player (queue, gapless, ReplayGain, EQ, scrobbling, radio, Android Auto),
                               audio devices, home-screen widget
   ui/                         screens and shared widgets
-android/app/src/main/kotlin   audio-device channel, home-screen widget
+android/app/src/main/kotlin   audio-device channel, home-screen widget, keep-running-while-downloading service
+tools/encore-usb.sh           run on the server's computer: downloads over a USB cable (adb reverse)
 ```
 
 ## Credits
