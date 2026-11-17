@@ -108,9 +108,12 @@ download is checked against the release's `SHA256SUMS.txt`. Android asks once to
 - Downloads never start over: a song that stops part-way (no signal, the app closed, the phone restarted)
   carries on from the byte it reached once the app is open and the server can be reached, and nothing you
   asked for is forgotten. Downloads keep going in the background, with a quiet "Downloading" notification.
-- Copy music over a USB cable: plug the phone (USB debugging on) into the computer that runs your server and
-  run `tools/encore-usb.sh` there. Downloads then go through the cable, without Wi-Fi or internet; Settings ›
-  Downloads › Copy all fetches the whole library. Unplug any time: it carries on over the network.
+- Over a USB cable: plug the phone (USB debugging on) into the computer that runs your server and run
+  `tools/encore-usb.sh` there. Everything (browsing, playing, downloads) then goes through the cable, without
+  Wi-Fi, internet or a VPN; Settings › Downloads › Copy all fetches the whole library. Unplug any time: it
+  carries on over the network.
+- Address on your home network (Settings › Server, optional): on the same Wi-Fi as your server, Encore goes
+  straight there instead of through a VPN or the internet, and uses the main address everywhere else.
 - Offline mode: the whole library index is kept on the phone (refreshed every 12 hours) for browsing and
   search; plays made offline are scrobbled later. When the server can't be reached (Tailscale off, the server
   asleep) the app notices within seconds and keeps working with what's on the phone.
