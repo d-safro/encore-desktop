@@ -79,6 +79,43 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     orElse: () => SidePanel.none,
   );
 
+  // Back and forward like a browser: Back pops (or goes to the page before), Forward undoes a Back.
+  final _visited = <String>[];
+  final _forward = <String>[];
+  bool _byHistory = false;
+
+  @override
+  void didUpdateWidget(DesktopShell old) {
+    super.didUpdateWidget(old);
+    if (old.location == widget.location) return;
+    if (!_byHistory) _forward.clear(); // somewhere new: Forward has nothing to redo
+    _byHistory = false;
+    _visited.add(old.location);
+    if (_visited.length > 100) _visited.removeAt(0);
+  }
+
+  bool get canBack => context.canPop() || _visited.isNotEmpty;
+
+  void back() {
+    if (!canBack) return;
+    _byHistory = true;
+    _forward.add(widget.location);
+    if (context.canPop()) {
+      context.pop();
+      if (_visited.isNotEmpty) _visited.removeLast();
+    } else {
+      context.go(_visited.removeLast());
+    }
+    setState(() {});
+  }
+
+  void forward() {
+    if (_forward.isEmpty) return;
+    _byHistory = true;
+    context.push(_forward.removeLast());
+    setState(() {});
+  }
+
   void _show(SidePanel p) {
     setState(() => _shown = _shown == p ? SidePanel.none : p);
     prefs.setString('sidePanel', _shown.name);
@@ -119,7 +156,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
           _ => AudioServiceRepeatMode.none,
         });
       case 'search':
-        context.go('/search');
+        desktopSearchFocus.requestFocus();
       case 'player':
         if (h.mediaItem.value != null) context.push('/player');
       case 'queue':
@@ -129,7 +166,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       case 'devices':
         showDevicesSheet(context);
       case 'goBack':
-        if (context.canPop()) context.pop();
+        back();
+      case 'goForward':
+        forward();
       case 'settings':
         context.push('/settings');
       case 'quit':
@@ -149,19 +188,36 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     return DesktopShortcuts(
       onRun: _run,
       child: Scaffold(
-        backgroundColor: cs.surfaceContainerLowest,
+        // a darker window behind rounded panes (sidebar, page, side panel)
+        backgroundColor: Color.alphaBlend(Colors.black.withValues(alpha: 0.5), cs.surface),
         body: Column(
           children: [
             Expanded(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(width: _side, child: _Sidebar(location: widget.location)),
+                  const SizedBox(width: 8),
+                  SizedBox(width: _side, child: _Pane(child: _Sidebar(location: widget.location))),
                   _Splitter(onDrag: (dx) {
                     setState(() => _side = (_side + dx).clamp(200, 360));
                   }, onDone: () => prefs.setDouble('sidebarWidth', _side)),
                   Expanded(
-                    child: _Pane(child: widget.child),
+                    child: _Pane(
+                      child: Column(
+                        children: [
+                          _TopBar(
+                            canBack: canBack,
+                            canForward: _forward.isNotEmpty,
+                            onBack: back,
+                            onForward: forward,
+                            query: widget.location.startsWith('/search')
+                                ? Uri.parse(widget.location).queryParameters['q'] ?? ''
+                                : '',
+                          ),
+                          Expanded(child: widget.child),
+                        ],
+                      ),
+                    ),
                   ),
                   if (_shown != SidePanel.none) ...[
                     _Splitter(onDrag: (dx) {
@@ -177,6 +233,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                       ),
                     ),
                   ],
+                  const SizedBox(width: 8),
                 ],
               ),
             ),
@@ -316,6 +373,27 @@ class _Sidebar extends ConsumerWidget {
                     leading: Cover(p.cover, size: 22, radius: 5),
                   ),
                 ),
+              ...switch (ref.watch(playlistsProvider).value) {
+                final lists? when lists.isNotEmpty => [
+                  header('Playlists'),
+                  for (final pl in lists.where((pl) => !pins.any((p) => p.kind == 'playlist' && p.id == pl.id)))
+                    GestureDetector(
+                      onSecondaryTap: () => showCollectionMenu(
+                        context,
+                        ref,
+                        pl.name,
+                        () async => (await ref.read(repoProvider).playlist(pl.id)).songs,
+                        pin: LibraryPin('playlist', pl.id, pl.name, cover: pl.coverArt, subtitle: 'Playlist'),
+                      ),
+                      child: item(
+                        SideItem(pl.name, Icons.queue_music_rounded, '/playlist/${pl.id}'),
+                        leading: Cover(pl.coverArt, size: 22, radius: 5, icon: Icons.queue_music_rounded),
+                      ),
+                    ),
+                ],
+                _ => const <Widget>[],
+              },
+              header('Browse'),
               for (final i in sideLibrary) item(i),
             ],
           ),
@@ -624,7 +702,12 @@ class _BarSeekState extends ConsumerState<_BarSeek> {
   double? _drag;
   @override
   Widget build(BuildContext context) {
-    final p = ref.watch(positionProvider).value ?? const PositionData(Duration.zero, Duration.zero, Duration.zero);
+    var p = ref.watch(positionProvider).value ?? const PositionData(Duration.zero, Duration.zero, Duration.zero);
+    final song = ref.watch(currentSongProvider);
+    if (p.duration == Duration.zero && (song?.duration ?? 0) > 0) {
+      // not loaded yet (paused since the app started): the song's own length
+      p = PositionData(p.position, p.buffered, Duration(seconds: song!.duration!));
+    }
     final max = p.duration.inMilliseconds.toDouble();
     final v = (_drag ?? p.position.inMilliseconds.toDouble()).clamp(0.0, max > 0 ? max : 1.0);
     final t = Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant);
@@ -724,6 +807,86 @@ class _VolumeState extends State<_Volume> {
                 overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
               ),
               child: Slider(value: _v, onChanged: _set),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Above the page: back and forward, and a search box (Enter searches; Ctrl+F jumps here).
+class _TopBar extends StatefulWidget {
+  const _TopBar({
+    required this.canBack,
+    required this.canForward,
+    required this.onBack,
+    required this.onForward,
+    required this.query,
+  });
+  final bool canBack, canForward;
+  final VoidCallback onBack, onForward;
+  final String query;
+
+  @override
+  State<_TopBar> createState() => _TopBarState();
+}
+
+/// So Ctrl+F can put the cursor in the search box.
+final desktopSearchFocus = FocusNode(debugLabel: 'desktop search');
+
+class _TopBarState extends State<_TopBar> {
+  late final _ctl = TextEditingController(text: widget.query);
+
+  @override
+  void didUpdateWidget(_TopBar old) {
+    super.didUpdateWidget(old);
+    if (old.query != widget.query && !desktopSearchFocus.hasFocus) _ctl.text = widget.query;
+  }
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 12, 0),
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: 'Back (Alt+←)',
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+            onPressed: widget.canBack ? widget.onBack : null,
+          ),
+          IconButton(
+            tooltip: 'Forward (Alt+→)',
+            icon: const Icon(Icons.arrow_forward_ios_rounded, size: 18),
+            onPressed: widget.canForward ? widget.onForward : null,
+          ),
+          const SizedBox(width: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: SizedBox(
+              height: 40,
+              child: TextField(
+                controller: _ctl,
+                focusNode: desktopSearchFocus,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (q) => context.go(q.trim().isEmpty ? '/search' : '/search?q=${Uri.encodeQueryComponent(q.trim())}'),
+                decoration: InputDecoration(
+                  hintText: 'What do you want to play?',
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                  fillColor: cs.surfaceContainerHigh,
+                  filled: true,
+                ),
+              ),
             ),
           ),
         ],

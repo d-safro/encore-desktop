@@ -187,6 +187,9 @@ class _Tray with TrayListener {
     handler.mediaItem.listen((m) {
       _item = m;
       _menu();
+      // the window's title (taskbar, Alt+Tab): what's playing
+      final artist = m?.artist ?? '';
+      windowManager.setTitle(m == null ? 'Encore' : '${m.title}${artist.isEmpty ? '' : ' · $artist'} — Encore');
     });
     handler.playbackState.map((s) => s.playing).distinct().listen((pl) {
       _playing = pl;

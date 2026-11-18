@@ -39,6 +39,7 @@ final desktopShortcuts = <DesktopShortcut>[
     SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true),
     SingleActivator(LogicalKeyboardKey.escape),
   ]),
+  const DesktopShortcut('goForward', 'Alt+→', 'Go forward', [SingleActivator(LogicalKeyboardKey.arrowRight, alt: true)]),
   const DesktopShortcut('settings', 'Ctrl+,', 'Settings', [SingleActivator(LogicalKeyboardKey.comma, control: _c)], whileTyping: true),
   for (var i = 1; i <= 6; i++)
     DesktopShortcut('tab$i', 'Ctrl+$i', i == 1 ? 'Sidebar sections 1 to 6' : '', [
