@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 import 'package:logging/logging.dart';
 import 'package:media_kit/media_kit.dart';
@@ -144,6 +145,11 @@ class MediaKitPlayer extends AudioPlayerPlatform {
           _errorCode = kErrorCode;
           _errorMessage = error;
           _updatePlaybackEvent();
+          // a song that won't open fails its load (as on Android), instead of loading forever
+          final c = _loadCompleter;
+          if (c != null && !c.isCompleted) {
+            c.completeError(PlatformException(code: '$kErrorCode', message: error));
+          }
         }
         _logger.severe('ERROR OCCURRED: $error');
       }),
