@@ -441,6 +441,10 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   Media _convertAudioSourceIntoMediaKit(AudioSourceMessage audioSource) {
     switch (audioSource) {
       case final UriAudioSourceMessage uriSource:
+        final u = Uri.tryParse(uriSource.uri);
+        // where it comes from, without the login (t, s, u, p)
+        _logger.fine('open ${u?.scheme}://${u?.host}${u?.path} '
+            '${u?.queryParameters.keys.where((k) => !const {'t', 's', 'u', 'p'}.contains(k)).map((k) => '$k=${u.queryParameters[k]}').join('&')}');
         return Media(uriSource.uri, httpHeaders: audioSource.headers);
 
       // removed because it doesn't seem to be actually working.

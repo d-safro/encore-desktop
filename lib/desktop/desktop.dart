@@ -3,8 +3,9 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_service_mpris/audio_service_mpris.dart';
-import 'package:flutter/material.dart' show Rect, Size;
+import 'package:flutter/material.dart' show Rect, Size, debugPrint;
 import 'package:just_audio_mpv/just_audio_mpv.dart';
+import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -19,6 +20,9 @@ import '../playback/handler.dart';
 
 /// Before anything opens a database or a player (main() calls this first).
 Future<void> initDesktopPlatform() async {
+  // mpv's warnings and errors (a song that won't open, a filter it refuses) go to the log
+  Logger.root.level = Level.INFO;
+  Logger.root.onRecord.listen((r) => debugPrint('Encore ${r.loggerName}: ${r.message}'));
   JustAudioMpv.ensureInitialized();
   // sqflite through FFI, with the databases in ~/.local/share/dev.safro.encore (not the current folder)
   sqfliteFfiInit();
