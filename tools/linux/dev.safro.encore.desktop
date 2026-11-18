@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Encore
+GenericName=Music Player
+Comment=Music from your Navidrome or Subsonic server
+Exec=encore %U
+Icon=dev.safro.encore
+Terminal=false
+Categories=AudioVideo;Audio;Player;Music;
+Keywords=music;navidrome;subsonic;player;podcast;
+StartupWMClass=dev.safro.encore
+SingleMainWindow=true
+X-KDE-StartupNotify=true

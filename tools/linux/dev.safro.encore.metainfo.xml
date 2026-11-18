@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>dev.safro.encore</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <name>Encore</name>
+  <summary>Music from your Navidrome or Subsonic server</summary>
+  <description>
+    <p>Encore plays your own music library from a Navidrome (or any Subsonic / OpenSubsonic) server, with
+      podcasts, internet radio, lyrics, smart playlists and offline downloads. The desktop app works with Encore
+      on your phone: the same account, the queue carries over, and each can control the other.</p>
+  </description>
+  <launchable type="desktop-id">dev.safro.encore.desktop</launchable>
+  <url type="homepage">https://github.com/d-safro/encore</url>
+  <content_rating type="oars-1.1"/>
+  <provides>
+    <binary>encore</binary>
+  </provides>
+</component>
