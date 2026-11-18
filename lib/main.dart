@@ -21,7 +21,8 @@ Future<void> main() async {
   // Errors are logged, never fatal: a failed request or a broken image must not take the app down.
   FlutterError.onError = (d) => FlutterError.presentError(d);
   PlatformDispatcher.instance.onError = (e, st) {
-    debugPrint('Encore: unhandled $e');
+    // where it came from too (the first lines are enough to find it)
+    debugPrint('Encore: unhandled $e\n${st.toString().split('\n').take(12).join('\n')}');
     return true;
   };
   prefs = await SharedPreferences.getInstance();
