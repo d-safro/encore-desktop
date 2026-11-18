@@ -30,7 +30,7 @@ with Encore on your phone: the same account, the queue carries over, and each ca
 %install
 mkdir -p %{buildroot}%{_libdir}/encore %{buildroot}%{_bindir}
 cp -a app/. %{buildroot}%{_libdir}/encore/
-ln -s %{_libdir}/encore/encore %{buildroot}%{_bindir}/encore
+ln -s ../%{_lib}/encore/encore %{buildroot}%{_bindir}/encore
 install -Dm644 dev.safro.encore.desktop %{buildroot}%{_datadir}/applications/dev.safro.encore.desktop
 install -Dm644 dev.safro.encore.metainfo.xml %{buildroot}%{_metainfodir}/dev.safro.encore.metainfo.xml
 for d in icons/*; do
@@ -44,3 +44,7 @@ done
 %{_datadir}/applications/dev.safro.encore.desktop
 %{_metainfodir}/dev.safro.encore.metainfo.xml
 %{_datadir}/icons/hicolor/*/apps/dev.safro.encore.*
+
+%changelog
+* %(date '+%a %b %d %Y') Encore <noreply@github.com> - %{version}-1
+- Encore %{version}

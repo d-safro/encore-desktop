@@ -2,7 +2,7 @@
 
 # Encore
 
-A music player for Android that plays your **Navidrome** (or any Subsonic / OpenSubsonic) library. Dark,
+A music player for Android and the Linux desktop (made for Fedora with KDE Plasma) that plays your **Navidrome** (or any Subsonic / OpenSubsonic) library. Dark,
 minimalist, Material You. It can also show and fetch music you *don't* have yet, and recommend songs by how they
 sound, when the server has the extras described below.
 
@@ -29,6 +29,65 @@ downloads, queue and pins.
 
 Encore checks GitHub for new versions (about twice a day, can be switched off) and offers to install them; the
 download is checked against the release's `SHA256SUMS.txt`. Android asks once to let Encore install updates.
+
+## Desktop app (Linux)
+
+The same app for your computer, made for Fedora with KDE Plasma (any desktop with a system tray works). Every
+release on the [Releases](../../releases/latest) page has, next to the APKs:
+
+| File | For |
+|---|---|
+| `encore-<version>-linux-x86_64.tar.gz` | any Linux on a 64-bit PC: install it for yourself, no password needed, and Encore updates itself |
+| `encore-<version>-1.fc44.x86_64.rpm` | Fedora: install it for every user with dnf |
+
+For yourself (unpack, then run the installer in the folder; `./install.sh --uninstall` removes it again):
+
+```bash
+tar xf encore-*-linux-x86_64.tar.gz && encore-*-linux-x86_64/install.sh
+```
+
+Or with dnf:
+
+```bash
+sudo dnf install ./encore-*.x86_64.rpm
+```
+
+It needs mpv's library for sound (`mpv-libs` on Fedora; the RPM brings it in). The phone's update check only
+ever takes an APK, and the desktop's only its own archive.
+
+**On the desktop**
+- Every page from the phone, in a window made for a mouse and keyboard: a sidebar with your sections, liked
+  songs and pins; a resizable side panel for the queue or lyrics; a player bar with volume along the bottom;
+  right-click for the menus a long-press opens on the phone. The full-screen player is the phone's.
+- Plasma's media controls, the lock screen, the keyboard's media keys and KDE Connect control Encore (MPRIS).
+- A tray icon: left click shows or hides the window, right click for play / pause, next and quit. Closing the
+  window keeps the music playing in the tray (Settings › Desktop). "Start when you log in" starts it in the tray.
+- Colours from Plasma's accent colour (Settings › Appearance › Colour from wallpaper), or the album art, or yours.
+- Sound: equalizer, speed and pitch, skip silence, ReplayGain and crossfade as on the phone, an output device
+  picker (PipeWire), and Encore's own volume (also in Plasma's volume applet as "Encore").
+- Notifications for new podcast episodes; downloads for offline play; Chromecast (the computer streams to the
+  speaker on port 4547: on Fedora let it through with
+  `sudo firewall-cmd --add-port=4547/tcp`, add `--permanent` to keep it).
+- Keyboard: Space play / pause, Ctrl+→ / Ctrl+← next / previous, Shift+→ / Shift+← 10 seconds, Ctrl+↑ / Ctrl+↓
+  volume, Ctrl+F search, Ctrl+L like, Ctrl+S shuffle, Ctrl+R repeat, Ctrl+P full-screen player, Ctrl+Shift+Q
+  queue, Ctrl+Shift+L lyrics, Ctrl+D devices, Alt+← back, Ctrl+, settings, Ctrl+1…6 sections, Ctrl+Q quit
+  (Settings › Desktop › Keyboard shortcuts).
+- Not on the desktop: the home-screen widget (Plasma's media applet does that), Android Auto, the app icon
+  choice, and USB-cable mode. If the computer runs your server, give it the server's own address in Settings ›
+  Server › Address on your home network (e.g. `http://127.0.0.1:4540` with the server extras).
+
+**With your phone**
+- The same server accounts: sign in with your password, or **sign in with your phone**: type the server address
+  on the computer, press "Sign in with your phone" and type the 6-digit code it shows on the phone (Settings ›
+  Sign in another device). Works the other way round too.
+- The queue and where you are follow you (kept on the server): "Continue from another device" on Home.
+- Your devices (Settings › Connect to your other devices, or the devices button in the player): see what the
+  other one is playing, **Play here** (take it over where it is), **Play on …** (hand it over), or use it as a
+  remote: play / pause, skip, seek and volume.
+- Pins, Home sections, smart-shuffle songs you dropped, lyrics you picked and podcast episodes marked played stay
+  the same on both. Plays, stats, hearts, ratings, playlists and smart playlists are on the server anyway.
+- Devices, sync and phone sign-in need the server extras (music-lookup); without them each device keeps its own
+  pins and "Continue from another device" still works.
 
 ## Features
 
@@ -140,6 +199,9 @@ self-hosted media stack (not published yet):
 - `jamStart` / `jamState` / `jamPoll` / `jamEnd` and the public Jam page.
 - The Subsonic podcast API (`getPodcasts`, `getNewestPodcasts`, `createPodcastChannel`…, bookmarks for where you
   stopped, `setPodcastProgress`), which Navidrome itself doesn't have.
+- `deviceHello` / `devicePoll` / `deviceCommand` / `deviceState`, `syncGet` / `syncSet` and `pairStart` /
+  `pairPoll` / `pairApprove`: your devices controlling each other, small things kept in step, and signing in
+  with your phone.
 - `/rest/audiomuse/*`: a pass-through to [AudioMuse-AI](https://github.com/NeptuneHub/AudioMuse-AI) for the AI
   features. Song radio and sound-alike artists also use Navidrome's own AudioMuse plugin
   (`getSonicSimilarTracks`) and fall back to `getSimilarSongs2` without it.
@@ -154,7 +216,18 @@ Needs Flutter 3.50+ and the Android SDK (platform 36+).
 flutter build apk --release --split-per-abi
 ```
 
-The APKs are in `build/app/outputs/flutter-apk/`. Release builds are signed with the key described in
+The APKs are in `build/app/outputs/flutter-apk/`.
+
+The desktop app (Fedora: `sudo dnf install clang cmake ninja-build gtk3-devel mpv-devel libsecret-devel
+libayatana-appindicator-gtk3-devel lld rpm-build inkscape`):
+
+```bash
+flutter run -d linux                 # try it
+tools/linux/build.sh                 # dist/: the .tar.gz, the .rpm and SHA256SUMS-linux.txt
+```
+
+For a release, add the lines of `dist/SHA256SUMS-linux.txt` to the release's `SHA256SUMS.txt` and upload the
+two files next to the APKs. Release builds are signed with the key described in
 `android/key.properties`, or the file named by the `ENCORE_KEY_PROPERTIES` environment variable:
 
 ```properties
@@ -175,8 +248,13 @@ lib/
   data/                       Subsonic client, models, sign-in, offline database, sync, downloads,
                               AI (AudioMuse), online covers and lyrics
   playback/                   the player (queue, gapless, ReplayGain, EQ, scrobbling, radio, Android Auto),
-                              audio devices, home-screen widget
+                              audio devices, home-screen widget; desktop_audio.dart: mpv filters and devices
+  data/devices.dart, sync.dart, pairing.dart   your devices, things kept in step, sign in with your phone
+  desktop/                    the desktop window: layout, tray, MPRIS, shortcuts, Settings › Desktop
   ui/                         screens and shared widgets
+linux/                        the GTK runner (one window; a second launch shows it; --hidden starts in the tray)
+packages/just_audio_mpv/      just_audio on libmpv, with the equalizer and other filters (from just_audio_media_kit)
+tools/linux/                  .desktop entry, metainfo, install.sh, RPM spec, build.sh
 android/app/src/main/kotlin   audio-device channel, home-screen widget, keep-running-while-downloading service
 tools/encore-usb.sh           run on the server's computer: downloads over a USB cable (adb reverse)
 ```
