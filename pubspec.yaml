@@ -61,6 +61,9 @@ dependencies:
   flutter_local_notifications: ^23.0.2
   workmanager: ^0.10.10
   multicast_dns: ^0.3.3+1
+  image_picker: ^1.2.4
+  file_picker: ^13.4.0
+  image: ^4.13.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
