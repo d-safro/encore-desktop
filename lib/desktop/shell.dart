@@ -197,10 +197,16 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(width: 8),
-                  SizedBox(width: _side, child: _Pane(child: _Sidebar(location: widget.location))),
-                  _Splitter(onDrag: (dx) {
-                    setState(() => _side = (_side + dx).clamp(200, 360));
-                  }, onDone: () => prefs.setDouble('sidebarWidth', _side)),
+                  SizedBox(
+                    width: _side,
+                    child: _Pane(child: _Sidebar(location: widget.location)),
+                  ),
+                  _Splitter(
+                    onDrag: (dx) {
+                      setState(() => _side = (_side + dx).clamp(200, 360));
+                    },
+                    onDone: () => prefs.setDouble('sidebarWidth', _side),
+                  ),
                   Expanded(
                     child: _Pane(
                       child: Column(
@@ -210,6 +216,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                             canForward: _forward.isNotEmpty,
                             onBack: back,
                             onForward: forward,
+                            searchBox: !widget.location.startsWith('/search'), // that page has its own
                             query: widget.location.startsWith('/search')
                                 ? Uri.parse(widget.location).queryParameters['q'] ?? ''
                                 : '',
@@ -220,9 +227,12 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                     ),
                   ),
                   if (_shown != SidePanel.none) ...[
-                    _Splitter(onDrag: (dx) {
-                      setState(() => _panel = (_panel - dx).clamp(280, 520));
-                    }, onDone: () => prefs.setDouble('panelWidth', _panel)),
+                    _Splitter(
+                      onDrag: (dx) {
+                        setState(() => _panel = (_panel - dx).clamp(280, 520));
+                      },
+                      onDone: () => prefs.setDouble('panelWidth', _panel),
+                    ),
                     SizedBox(
                       width: _panel,
                       child: _Pane(
@@ -343,7 +353,10 @@ class _Sidebar extends ConsumerWidget {
               Text('Encore', style: t.titleLarge),
               const Spacer(),
               if (offline)
-                Tooltip(message: 'Offline: playing what\'s on this computer', child: Icon(Icons.cloud_off_rounded, size: 18, color: cs.onSurfaceVariant)),
+                Tooltip(
+                  message: 'Offline: playing what\'s on this computer',
+                  child: Icon(Icons.cloud_off_rounded, size: 18, color: cs.onSurfaceVariant),
+                ),
             ],
           ),
         ),
@@ -399,10 +412,7 @@ class _Sidebar extends ConsumerWidget {
           ),
         ),
         if (online.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-            child: _DeviceHint(online.first),
-          ),
+          Padding(padding: const EdgeInsets.fromLTRB(8, 0, 8, 4), child: _DeviceHint(online.first)),
         item(const SideItem('Settings', Icons.settings_rounded, '/settings')),
         const SizedBox(height: 8),
       ],
@@ -476,8 +486,8 @@ class PlayerBar extends ConsumerWidget {
     final t = Theme.of(context).textTheme;
     if (item == null) return const SizedBox.shrink();
     final playing = st?.playing ?? false;
-    final loading = st?.processingState == AudioProcessingState.loading ||
-        st?.processingState == AudioProcessingState.buffering;
+    final loading =
+        st?.processingState == AudioProcessingState.loading || st?.processingState == AudioProcessingState.buffering;
     final shuffle = audioHandler.shuffleKind;
     final repeat = st?.repeatMode ?? AudioServiceRepeatMode.none;
     Color on(bool v) => v ? cs.primary : cs.onSurfaceVariant;
@@ -518,7 +528,9 @@ class PlayerBar extends ConsumerWidget {
                         _Link(
                           text: item.title,
                           style: t.titleSmall,
-                          onTap: song == null || song.albumId.isEmpty ? null : () => context.push('/album/${song.albumId}'),
+                          onTap: song == null || song.albumId.isEmpty
+                              ? null
+                              : () => context.push('/album/${song.albumId}'),
                         ),
                         _Link(
                           text: item.artist ?? '',
@@ -583,7 +595,11 @@ class PlayerBar extends ConsumerWidget {
                           ),
                           onPressed: playing ? audioHandler.pause : audioHandler.play,
                           child: loading
-                              ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: cs.surface))
+                              ? SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: cs.surface),
+                                )
                               : Icon(playing ? Icons.pause_rounded : Icons.play_arrow_rounded, size: 26),
                         ),
                       ),
@@ -684,9 +700,7 @@ class _LinkState extends State<_Link> {
         widget.text,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: widget.style?.copyWith(
-          decoration: _hover && widget.onTap != null ? TextDecoration.underline : null,
-        ),
+        style: widget.style?.copyWith(decoration: _hover && widget.onTap != null ? TextDecoration.underline : null),
       ),
     ),
   );
@@ -713,7 +727,10 @@ class _BarSeekState extends ConsumerState<_BarSeek> {
     final t = Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant);
     return Row(
       children: [
-        SizedBox(width: 44, child: Text(formatDuration(v ~/ 1000), style: t, textAlign: TextAlign.right)),
+        SizedBox(
+          width: 44,
+          child: Text(formatDuration(v ~/ 1000), style: t, textAlign: TextAlign.right),
+        ),
         Expanded(
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
@@ -823,8 +840,9 @@ class _TopBar extends StatefulWidget {
     required this.onBack,
     required this.onForward,
     required this.query,
+    this.searchBox = true,
   });
-  final bool canBack, canForward;
+  final bool canBack, canForward, searchBox;
   final VoidCallback onBack, onForward;
   final String query;
 
@@ -868,27 +886,29 @@ class _TopBarState extends State<_TopBar> {
             onPressed: widget.canForward ? widget.onForward : null,
           ),
           const SizedBox(width: 8),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: SizedBox(
-              height: 40,
-              child: TextField(
-                controller: _ctl,
-                focusNode: desktopSearchFocus,
-                textInputAction: TextInputAction.search,
-                onSubmitted: (q) => context.go(q.trim().isEmpty ? '/search' : '/search?q=${Uri.encodeQueryComponent(q.trim())}'),
-                decoration: InputDecoration(
-                  hintText: 'What do you want to play?',
-                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                  contentPadding: EdgeInsets.zero,
-                  isDense: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
-                  fillColor: cs.surfaceContainerHigh,
-                  filled: true,
+          if (widget.searchBox)
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: SizedBox(
+                height: 40,
+                child: TextField(
+                  controller: _ctl,
+                  focusNode: desktopSearchFocus,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (q) =>
+                      context.go(q.trim().isEmpty ? '/search' : '/search?q=${Uri.encodeQueryComponent(q.trim())}'),
+                  decoration: InputDecoration(
+                    hintText: 'What do you want to play?',
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                    fillColor: cs.surfaceContainerHigh,
+                    filled: true,
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

@@ -138,7 +138,10 @@ MyApplication* my_application_new() {
   // the application to be recognized beyond its binary name.
   g_set_prgname(APPLICATION_ID);
 
+  // ENCORE_NON_UNIQUE=1: a second copy that doesn't hand over to the open one (for testing)
+  GApplicationFlags flags = g_getenv("ENCORE_NON_UNIQUE") != nullptr ? G_APPLICATION_NON_UNIQUE
+                                                                      : G_APPLICATION_DEFAULT_FLAGS;
   return MY_APPLICATION(g_object_new(my_application_get_type(),
                                      "application-id", APPLICATION_ID, "flags",
-                                     G_APPLICATION_DEFAULT_FLAGS, nullptr));
+                                     flags, nullptr));
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_service_mpris/audio_service_mpris.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart' show Rect, Size, debugPrint;
 import 'package:just_audio_mpv/just_audio_mpv.dart';
 import 'package:logging/logging.dart';
@@ -13,6 +14,7 @@ import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../core/settings.dart';
+import '../data/episode_alerts.dart' show notifications;
 import '../playback/handler.dart';
 
 /// The desktop app's pieces that the phone doesn't have: mpv for sound, SQLite through FFI, MPRIS for
@@ -60,6 +62,18 @@ class _WindowEvents with WindowListener {
   void onWindowClose() async {
     if (closeToTray) {
       await windowManager.hide();
+      // the first time: say where it went, so music going on isn't a mystery
+      if (prefs.getBool('trayHintShown') != true) {
+        await prefs.setBool('trayHintShown', true);
+        try {
+          await notifications.show(
+            id: 7001,
+            title: 'Encore is still running',
+            body: 'It keeps playing in the system tray. Quit from the tray icon, or turn this off in Settings › Desktop.',
+            notificationDetails: const NotificationDetails(linux: LinuxNotificationDetails()),
+          );
+        } catch (_) {}
+      }
     } else {
       await quitApp();
     }
