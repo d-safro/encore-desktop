@@ -183,11 +183,29 @@ Future<void> quitApp() async {
   exit(0);
 }
 
+/// Settings › Desktop: a notification when the song changes (only while Encore's window isn't in front).
+bool get songNotifications => prefs.getBool('songNotifications') ?? false;
+Future<void> setSongNotifications(bool v) => prefs.setBool('songNotifications', v);
+
+Future<void> _songNotification(MediaItem m) async {
+  if (!songNotifications) return;
+  try {
+    if (await windowManager.isVisible() && await windowManager.isFocused()) return;
+    await notifications.show(
+      id: 7002, // the same id each time: the new song replaces the last one
+      title: m.title,
+      body: [m.artist, m.album].whereType<String>().where((x) => x.isNotEmpty).join(' — '),
+      notificationDetails: const NotificationDetails(linux: LinuxNotificationDetails()),
+    );
+  } catch (_) {}
+}
+
 // ── The tray icon (StatusNotifierItem, shown in Plasma's system tray) ──
 
 class _Tray with TrayListener {
   _Tray(this.handler);
   final AudioHandler handler;
+  String? _notified;
   MediaItem? _item;
   bool _playing = false;
 
@@ -208,6 +226,10 @@ class _Tray with TrayListener {
       // the window's title (taskbar, Alt+Tab): what's playing
       final artist = m?.artist ?? '';
       windowManager.setTitle(m == null ? 'Encore' : '${m.title}${artist.isEmpty ? '' : ' · $artist'} — Encore');
+      if (m != null && m.id != _notified) {
+        _notified = m.id;
+        _songNotification(m);
+      }
     });
     handler.playbackState.map((s) => s.playing).distinct().listen((pl) {
       _playing = pl;

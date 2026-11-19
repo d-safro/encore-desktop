@@ -67,6 +67,16 @@ class _DesktopSettingsState extends ConsumerState<DesktopSettings> {
             setState(() {});
           },
         ),
+        SwitchListTile(
+          secondary: const Icon(Icons.notifications_none_rounded),
+          title: const Text('Show each new song'),
+          subtitle: const Text('A notification when the song changes, while Encore isn\'t the window in front'),
+          value: songNotifications,
+          onChanged: (v) async {
+            await setSongNotifications(v);
+            setState(() {});
+          },
+        ),
         ListTile(
           leading: const Icon(Icons.keyboard_rounded),
           title: const Text('Keyboard shortcuts'),

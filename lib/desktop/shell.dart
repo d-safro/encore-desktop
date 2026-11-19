@@ -20,6 +20,7 @@ import '../ui/screens/player.dart';
 import '../ui/state.dart';
 import '../ui/widgets.dart';
 import 'desktop.dart';
+import 'drag.dart';
 import 'shortcuts.dart';
 
 /// The desktop window: a sidebar (sections, your library and pins), the page, an optional side panel (queue
@@ -237,7 +238,11 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                       width: _panel,
                       child: _Pane(
                         child: switch (_shown) {
-                          SidePanel.queue => const QueueScreen(embedded: true),
+                          SidePanel.queue => SongDropTarget(
+                            radius: 12,
+                            onDrop: (songs) => dropOnQueue(context, songs),
+                            child: const QueueScreen(embedded: true),
+                          ),
                           _ => const _LyricsPanel(),
                         },
                       ),
@@ -366,9 +371,12 @@ class _Sidebar extends ConsumerWidget {
             children: [
               for (final i in sideSections) item(i),
               header('Your library'),
-              item(
-                const SideItem('Liked songs', Icons.favorite_rounded, '/liked'),
-                leading: Icon(Icons.favorite_rounded, size: 20, color: cs.primary),
+              SongDropTarget(
+                onDrop: (songs) => dropOnLiked(context, ref, songs),
+                child: item(
+                  const SideItem('Liked songs', Icons.favorite_rounded, '/liked'),
+                  leading: Icon(Icons.favorite_rounded, size: 20, color: cs.primary),
+                ),
               ),
               for (final p in pins)
                 GestureDetector(
@@ -381,10 +389,18 @@ class _Sidebar extends ConsumerWidget {
                         : (await ref.read(repoProvider).playlist(p.id)).songs,
                     pin: p,
                   ),
-                  child: item(
-                    SideItem(p.name, Icons.push_pin_rounded, '/${p.kind}/${p.id}'),
-                    leading: Cover(p.cover, size: 22, radius: 5),
-                  ),
+                  child: p.kind == 'playlist'
+                      ? SongDropTarget(
+                          onDrop: (songs) => dropOnPlaylist(context, ref, p.id, p.name, songs),
+                          child: item(
+                            SideItem(p.name, Icons.push_pin_rounded, '/${p.kind}/${p.id}'),
+                            leading: Cover(p.cover, size: 22, radius: 5),
+                          ),
+                        )
+                      : item(
+                          SideItem(p.name, Icons.push_pin_rounded, '/${p.kind}/${p.id}'),
+                          leading: Cover(p.cover, size: 22, radius: 5),
+                        ),
                 ),
               ...switch (ref.watch(playlistsProvider).value) {
                 final lists? when lists.isNotEmpty => [
@@ -398,9 +414,12 @@ class _Sidebar extends ConsumerWidget {
                         () async => (await ref.read(repoProvider).playlist(pl.id)).songs,
                         pin: LibraryPin('playlist', pl.id, pl.name, cover: pl.coverArt, subtitle: 'Playlist'),
                       ),
-                      child: item(
-                        SideItem(pl.name, Icons.queue_music_rounded, '/playlist/${pl.id}'),
-                        leading: Cover(pl.coverArt, size: 22, radius: 5, icon: Icons.queue_music_rounded),
+                      child: SongDropTarget(
+                        onDrop: (songs) => dropOnPlaylist(context, ref, pl.id, pl.name, songs),
+                        child: item(
+                          SideItem(pl.name, Icons.queue_music_rounded, '/playlist/${pl.id}'),
+                          leading: Cover(pl.coverArt, size: 22, radius: 5, icon: Icons.queue_music_rounded),
+                        ),
                       ),
                     ),
                 ],
