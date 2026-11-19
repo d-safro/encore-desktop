@@ -64,6 +64,9 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     _set('prefetch-playlist', 'yes');
     _set('gapless-audio', 'yes');
     _set('audio-client-name', JustAudioMpv.title);
+    // never hand a failed address to youtube-dl, and keep the read-ahead in memory
+    _set('ytdl', 'no');
+    _set('cache-on-disk', 'no');
 
     _streamSubscriptions = [
       _player.stream.duration.listen((duration) {

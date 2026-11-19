@@ -20,11 +20,15 @@ import '../playback/handler.dart';
 /// The desktop app's pieces that the phone doesn't have: mpv for sound, SQLite through FFI, MPRIS for
 /// Plasma's media controls, the window (size remembered, close to the tray) and the tray icon.
 
+/// Song addresses carry the login (Subsonic token and salt): never write those to a log.
+String scrubLogin(String text) =>
+    text.replaceAllMapped(RegExp(r'([?&](?:u|t|s|p|apiKey)=)[^&\s]*'), (m) => '${m[1]}…');
+
 /// Before anything opens a database or a player (main() calls this first).
 Future<void> initDesktopPlatform() async {
   // mpv's warnings and errors (a song that won't open, a filter it refuses) go to the log
   Logger.root.level = Level.INFO;
-  Logger.root.onRecord.listen((r) => debugPrint('Encore ${r.loggerName}: ${r.message}'));
+  Logger.root.onRecord.listen((r) => debugPrint('Encore ${r.loggerName}: ${scrubLogin(r.message)}'));
   JustAudioMpv.ensureInitialized();
   // sqflite through FFI, with the databases in ~/.local/share/dev.safro.encore (not the current folder)
   sqfliteFfiInit();

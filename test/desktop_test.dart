@@ -164,6 +164,15 @@ void main() {
       expect((q.trigger, q.control, q.shift), (LogicalKeyboardKey.keyQ, true, false));
     });
 
+    test('logs never carry the login', () {
+      const line = 'Failed to open https://m.example/rest/stream?u=ann&t=abc123&s=salt9&v=1.16.1&id=42.';
+      final out = scrubLogin(line);
+      expect(out, isNot(contains('abc123')));
+      expect(out, isNot(contains('salt9')));
+      expect(out, isNot(contains('ann')));
+      expect(out, contains('id=42'));
+    });
+
     test('the autostart entry starts Encore in the tray', () {
       final e = autostartEntry('/home/me/.local/share/encore/app/encore');
       expect(e, contains('Exec="/home/me/.local/share/encore/app/encore" --hidden'));
