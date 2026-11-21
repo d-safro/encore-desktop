@@ -146,6 +146,10 @@ the setup program.
 - Your year (or a month) in review: a story of cards (top artists, songs, albums and genres, the first song,
   your longest streak, your hour, songs you found and kept) coloured from each one's art, ending with a picture to
   share, 9:16 or square (saved to Downloads on the desktop). From Stats, and a notification on 1 December.
+- Your mixes (a row on Home, made by your server as real playlists, so every app has them): Discover Weekly
+  (Mondays, 30 songs you don't have, fetched for a week, heart to keep), Release Radar (Fridays, new releases
+  from artists you follow and play most), Daily Mix 1–6 (your library around your top artists, some songs new to
+  you) and the Daylist (what you play at this time of day). Each can be turned off in Settings.
 - Smart playlists (Navidrome's own, so every app sees them): one-tap presets like "Forgotten favourites" and
   "On repeat", or your own rules.
 - Folders: your real folders on disk (with the server extras), else Navidrome's artist / album view.
