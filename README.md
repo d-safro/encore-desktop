@@ -143,6 +143,9 @@ the setup program.
 - Search across the server; recent searches remember the songs, albums and artists you opened.
 - Your listening: minutes, plays, top artists / songs / albums and when you listen, by week, month, year or
   all time (needs the server extras).
+- Your year (or a month) in review: a story of cards (top artists, songs, albums and genres, the first song,
+  your longest streak, your hour, songs you found and kept) coloured from each one's art, ending with a picture to
+  share, 9:16 or square (saved to Downloads on the desktop). From Stats, and a notification on 1 December.
 - Smart playlists (Navidrome's own, so every app sees them): one-tap presets like "Forgotten favourites" and
   "On repeat", or your own rules.
 - Folders: your real folders on disk (with the server extras), else Navidrome's artist / album view.
