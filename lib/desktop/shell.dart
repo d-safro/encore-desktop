@@ -56,6 +56,7 @@ final sideSections = [
 final sideLibrary = [
   SideItem('Albums', Icons.album_rounded, '/library?tab=2', match: (l) => _libraryTab(l, 2)),
   SideItem('Artists', Icons.person_rounded, '/library?tab=3', match: (l) => _libraryTab(l, 3)),
+  const SideItem('Following', Icons.how_to_reg_rounded, '/following'),
   SideItem('Songs', Icons.music_note_rounded, '/library?tab=4', match: (l) => _libraryTab(l, 4)),
   SideItem('Genres', Icons.category_rounded, '/library?tab=6', match: (l) => _libraryTab(l, 6)),
   const SideItem('Folders', Icons.folder_rounded, '/folders'),

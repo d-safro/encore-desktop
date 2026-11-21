@@ -184,6 +184,15 @@ ever takes an APK, and the desktop's only its own archive.
 
 **Your stuff**
 - Hearts, 1–5 star ratings, playlists (create, add, rename, reorder, remove, delete), scrobbling.
+- Add a whole album to a playlist (album page, long-press or right-click on an album): asks before adding songs
+  the playlist already has, and a toast offers Undo.
+- Follow artists (Follow on their page; Library → Artists → Followed artists). Follows are kept by the server's
+  extras for your account, so the phone and the desktop share them. New releases (albums, EPs, singles, also
+  upcoming ones and ones you don't have, as ⬇) from MusicBrainz and Deezer show on Home and under Following,
+  checked once a day, with an optional notification on release day.
+- Upcoming shows on artist pages and under Following → Shows, with a "near me" box (a city you type, no
+  location permission). MusicBrainz events without setup; add a free Ticketmaster key for more shows and
+  ticket links.
 
 **Look**
 - Choose the app icon: Encore's, a line style that matches icon packs like Arcticons, or the original.
