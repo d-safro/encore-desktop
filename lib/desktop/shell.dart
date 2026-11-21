@@ -552,7 +552,7 @@ class PlayerBar extends ConsumerWidget {
                     cursor: SystemMouseCursors.click,
                     child: Tappable(
                       onTap: () => context.push('/player'),
-                      child: Hero(
+                      child: HeroMode(enabled: !MediaQuery.disableAnimationsOf(context), child: Hero(
                         tag: 'cover',
                         child: Cover(
                           song?.coverArt ?? '',
@@ -562,7 +562,7 @@ class PlayerBar extends ConsumerWidget {
                           artist: song?.artist ?? '',
                           album: song?.album ?? '',
                         ),
-                      ),
+                      )),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -783,7 +783,7 @@ class _BarSeekState extends ConsumerState<_BarSeek> {
             ),
             child: SizedBox(
               height: 20,
-              child: Slider(
+              child: Semantics(label: 'Position', child: Slider(
                 value: v,
                 max: max > 0 ? max : 1,
                 secondaryTrackValue: p.buffered.inMilliseconds.toDouble().clamp(0.0, max > 0 ? max : 1.0),
@@ -792,7 +792,7 @@ class _BarSeekState extends ConsumerState<_BarSeek> {
                   audioHandler.seek(Duration(milliseconds: x.round()));
                   setState(() => _drag = null);
                 },
-              ),
+              )),
             ),
           ),
         ),
@@ -866,7 +866,7 @@ class _VolumeState extends State<_Volume> {
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
                 overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
               ),
-              child: Slider(value: _v, onChanged: _set),
+              child: Semantics(label: 'Volume', child: Slider(value: _v, onChanged: _set)),
             ),
           ),
         ],

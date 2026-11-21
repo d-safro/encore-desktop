@@ -379,7 +379,7 @@ class _MarqueeState extends State<Marquee> {
   }
 
   Future<void> _loop() async {
-    if (_running) return;
+    if (_running || MediaQuery.disableAnimationsOf(context)) return; // Reduce animations: it stays put
     _running = true;
     try {
       while (mounted && _ctl.hasClients && _ctl.position.maxScrollExtent > 0) {
