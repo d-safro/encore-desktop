@@ -221,6 +221,8 @@ the setup program.
 
 **Your stuff**
 - Hearts, 1–5 star ratings, playlists (create, add, rename, reorder, remove, delete), scrobbling.
+- Private session (Settings, or the devices sheet in the player): for up to 6 hours nothing you play is
+  scrobbled, counted in stats, shown as "now playing" (Discord) or learned by autoplay. A lock in the player shows it.
 - Add a whole album to a playlist (album page, long-press or right-click on an album): asks before adding songs
   the playlist already has, and a toast offers Undo.
 - Follow artists (Follow on their page; Library → Artists → Followed artists). Follows are kept by the server's
