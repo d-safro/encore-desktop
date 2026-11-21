@@ -18,6 +18,7 @@ import '../data/library_pins.dart';
 import '../data/models.dart';
 import '../playback/desktop_audio.dart';
 import '../playback/handler.dart';
+import '../playback/private_session.dart';
 import '../ui/actions.dart';
 import '../ui/devices_sheet.dart';
 import '../ui/screens/player.dart';
@@ -703,6 +704,13 @@ class PlayerBar extends ConsumerWidget {
                           icon: Icon(Icons.queue_music_rounded, size: 20, color: on(panel == SidePanel.queue)),
                           onPressed: () => onPanel(SidePanel.queue),
                         ),
+                        // the private session's badge (tap: end it)
+                        if (privateSessionOn(ref.watch(privateSessionProvider), DateTime.now()))
+                          IconButton(
+                            tooltip: 'Private session: plays aren\'t counted or shared. Click to end it',
+                            icon: Icon(Icons.lock_rounded, size: 20, color: cs.primary),
+                            onPressed: () => ref.read(privateSessionProvider.notifier).set(false),
+                          ),
                         ValueListenableBuilder<CastInfo?>(
                           valueListenable: castInfo,
                           builder: (ctx, info, _) => IconButton(
