@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
@@ -12,6 +15,7 @@ import 'core/platform.dart';
 import 'core/settings.dart';
 import 'data/account.dart';
 import 'data/cover_cache.dart';
+import 'data/saved_covers.dart';
 import 'data/db.dart';
 import 'data/devices.dart';
 import 'data/jam.dart';
@@ -36,6 +40,8 @@ Future<void> main(List<String> args) async {
   prefs = await SharedPreferences.getInstance();
   if (isDesktop) await initWindow();
   libraryDb = await LibraryDb.open(file: await currentDbFile()); // each server has its own copy
+  // the covers kept with the downloads: before the player, which shows them on the lock screen
+  savedCovers = await SavedCovers.open(Directory(p.join((await getApplicationSupportDirectory()).path, 'covers')));
 
   final container = ProviderContainer();
   await container.read(accountProvider.future); // the player needs the server before restoring the queue
