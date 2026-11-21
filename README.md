@@ -164,6 +164,9 @@ the setup program.
 - Cast to Chromecast / Google Cast speakers and TVs on your Wi-Fi. The phone stays the remote and passes
   the music along, so it works even when the speaker can't reach your server (e.g. a Tailscale-only server).
 - ReplayGain (track / album / automatic, pre-amp, peak protection), 5-band equalizer with presets.
+- What's playing? (Search): Encore listens for 10 s, with the microphone on the phone or to what the computer
+  plays on Linux, and your server recognises it among your own songs (song-id: fingerprints of your library,
+  offline, nothing sent anywhere). Finds are kept under "Identified before".
 - Synced lyrics (tap a line to jump), plain lyrics; online from LRCLIB, NetEase and lyrics.ovh (order and
   sources in Settings), and "Wrong lyrics?" to pick another match.
 - Translate lyrics (a chip over the words): a muted second line under each line, in your phone's language or
