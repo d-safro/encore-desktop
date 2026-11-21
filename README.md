@@ -163,6 +163,9 @@ the setup program.
 - ReplayGain (track / album / automatic, pre-amp, peak protection), 5-band equalizer with presets.
 - Synced lyrics (tap a line to jump), plain lyrics; online from LRCLIB, NetEase and lyrics.ovh (order and
   sources in Settings), and "Wrong lyrics?" to pick another match.
+- Translate lyrics (a chip over the words): a muted second line under each line, in your phone's language or
+  the one in Settings; Romanize for Japanese, Korean, Chinese, Cyrillic and other alphabets. Done by your server's
+  own AI (music-lookup + Ollama, only while AI is on), cached per song: nothing leaves home.
 - Internet radio: find stations in the Radio Browser directory or paste an address; shows the song playing.
 - Full-screen player coloured from the album art; swipe the cover to skip, double-tap to heart.
 
