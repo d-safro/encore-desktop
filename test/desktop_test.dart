@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio_mpv/just_audio_mpv.dart' as mpv;
 
 import 'package:encore/data/devices.dart';
+import 'package:encore/data/models.dart';
+import 'package:encore/ui/widgets.dart' show NameLink;
 import 'package:encore/data/pairing.dart';
 import 'package:encore/data/sync.dart';
 import 'package:encore/data/updates.dart';
@@ -172,6 +174,14 @@ void main() {
       File('${tmp.path}/icons/hicolor/256x256/apps/dev.safro.encore.png').createSync(recursive: true);
       expect(appIconInstalled([tmp.path]), isTrue);
       tmp.deleteSync(recursive: true);
+    });
+
+    test('names link to the right pages', () {
+      const song = Song(id: 's1', title: 'T', album: 'A', albumId: 'al1', artist: 'X', artistId: 'ar1');
+      expect(NameLink.albumOf(song), '/album/al1');
+      expect(NameLink.artistOf(song.artistId), '/artist/ar1');
+      expect(NameLink.albumOf(const Song(id: 's2', title: 'T', albumId: '')), isNull);
+      expect(NameLink.artistOf(''), isNull);
     });
 
     test('logs never carry the login', () {

@@ -696,33 +696,14 @@ class PlayerBar extends ConsumerWidget {
   }
 }
 
-/// Text that underlines on hover and opens [onTap] (the album, the artist).
-class _Link extends StatefulWidget {
+/// The player bar's song and artist: links like every other name (see NameLink).
+class _Link extends StatelessWidget {
   const _Link({required this.text, this.style, this.onTap});
   final String text;
   final TextStyle? style;
   final VoidCallback? onTap;
   @override
-  State<_Link> createState() => _LinkState();
-}
-
-class _LinkState extends State<_Link> {
-  bool _hover = false;
-  @override
-  Widget build(BuildContext context) => MouseRegion(
-    cursor: widget.onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
-    onEnter: (_) => setState(() => _hover = true),
-    onExit: (_) => setState(() => _hover = false),
-    child: Tappable(
-      onTap: widget.onTap,
-      child: Text(
-        widget.text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: widget.style?.copyWith(decoration: _hover && widget.onTap != null ? TextDecoration.underline : null),
-      ),
-    ),
-  );
+  Widget build(BuildContext context) => NameLink(text, onTap: onTap, style: style);
 }
 
 class _BarSeek extends ConsumerStatefulWidget {
