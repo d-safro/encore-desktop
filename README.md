@@ -141,6 +141,9 @@ the setup program.
   compilations; ⬇ for what you don't have), a bio (your server's, else Wikipedia), similar and sound-alike artists.
 - Album, playlist and genre pages; share links (song.link) that open in any music app.
 - Search across the server; recent searches remember the songs, albums and artists you opened.
+- Concerts near you (a row on Home, and Concerts): shows of the artists you play most and follow, near the town
+  you set under Following › Shows, checked once a week by your server (Ticketmaster with your key there, else
+  MusicBrainz). Tickets, Add to calendar, and a notification when a new one is announced.
 - Your listening: minutes, plays, top artists / songs / albums and when you listen, by week, month, year or
   all time (needs the server extras).
 - Your year (or a month) in review: a story of cards (top artists, songs, albums and genres, the first song,
