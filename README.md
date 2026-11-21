@@ -175,6 +175,8 @@ the setup program.
   beat, and eases back to its own during the blend. The queue shows each song's BPM.
 - Cast to Chromecast / Google Cast speakers and TVs on your Wi-Fi. The phone stays the remote and passes
   the music along, so it works even when the speaker can't reach your server (e.g. a Tailscale-only server).
+- UPnP / DLNA speakers, TVs and AV receivers show in the same list ("Play on"), found on the Wi-Fi and played
+  through the same relay, with their volume in the sheet. Generic UPnP: Sonos-specific behaviour isn't handled.
 - ReplayGain (track / album / automatic, pre-amp, peak protection), 5-band equalizer with presets.
 - What's playing? (Search): Encore listens for 10 s, with the microphone on the phone or to what the computer
   plays on Linux, and your server recognises it among your own songs (song-id: fingerprints of your library,
