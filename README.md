@@ -163,6 +163,8 @@ the setup program.
 - Crossfade (up to 12 s); albums played in order stay seamless unless you choose otherwise.
 - Cast to Chromecast / Google Cast speakers and TVs on your Wi-Fi. The phone stays the remote and passes
   the music along, so it works even when the speaker can't reach your server (e.g. a Tailscale-only server).
+- UPnP / DLNA speakers, TVs and AV receivers show in the same list ("Play on"), found on the Wi-Fi and played
+  through the same relay, with their volume in the sheet. Generic UPnP: Sonos-specific behaviour isn't handled.
 - ReplayGain (track / album / automatic, pre-amp, peak protection), 5-band equalizer with presets.
 - Synced lyrics (tap a line to jump), plain lyrics; online from LRCLIB, NetEase and lyrics.ovh (order and
   sources in Settings), and "Wrong lyrics?" to pick another match.
