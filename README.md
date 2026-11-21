@@ -234,6 +234,10 @@ the setup program.
   ticket links.
 
 **Look**
+- Screen readers (TalkBack): every button is labelled; a song row reads as one item ("title, artist, length,
+  playing, downloaded, liked") with Play next / Like / More as actions; the cover's swipes and double-tap are
+  actions too, and the seek bar says "1:12 of 3:40". Reduce animations (Appearance, or the phone's own "Remove
+  animations") stops page slides, colour fades and smooth scrolling.
 - Choose the app icon: Encore's, a line style that matches icon packs like Arcticons, or the original.
 - Phones, tablets and landscape: a side rail and a side-by-side player on wide screens.
 - Inter type, near-black surfaces, colour from your wallpaper (Material You), the playing album's art, or a
