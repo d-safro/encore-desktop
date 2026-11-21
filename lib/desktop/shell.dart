@@ -366,8 +366,11 @@ class _Sidebar extends ConsumerWidget {
           ),
         ),
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.only(bottom: 8),
+          child: _GutterScroll(
+            builder: (ctl) => ListView(
+            controller: ctl,
+            // the rows stop short of the edge: the scrollbar has its own lane beside them
+            padding: const EdgeInsets.only(bottom: 8, right: 10),
             children: [
               for (final i in sideSections) item(i),
               header('Your library'),
@@ -428,6 +431,7 @@ class _Sidebar extends ConsumerWidget {
               header('Browse'),
               for (final i in sideLibrary) item(i),
             ],
+          ),
           ),
         ),
         if (online.isNotEmpty)
@@ -913,4 +917,37 @@ class _TopBarState extends State<_TopBar> {
       ),
     );
   }
+}
+
+/// A list with a thin scrollbar in its own lane at the right (the default one is drawn over the rows): the
+/// list gives its rows right padding so a highlighted row never runs under the bar.
+class _GutterScroll extends StatefulWidget {
+  const _GutterScroll({required this.builder});
+  final Widget Function(ScrollController controller) builder;
+  @override
+  State<_GutterScroll> createState() => _GutterScrollState();
+}
+
+class _GutterScrollState extends State<_GutterScroll> {
+  final _ctl = ScrollController();
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ScrollConfiguration(
+    behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+    child: RawScrollbar(
+      controller: _ctl,
+      thickness: 6,
+      radius: const Radius.circular(3),
+      crossAxisMargin: 2,
+      mainAxisMargin: 4,
+      thumbColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.28),
+      child: widget.builder(_ctl),
+    ),
+  );
 }
