@@ -1,3 +1,7 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kDebugMode;
+
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
@@ -21,6 +25,7 @@ import '../ui/state.dart';
 import '../ui/widgets.dart';
 import 'desktop.dart';
 import 'drag.dart';
+import 'now_playing.dart';
 import 'shortcuts.dart';
 
 /// The desktop window: a sidebar (sections, your library and pins), the page, an optional side panel (queue
@@ -59,7 +64,7 @@ final sideLibrary = [
 ];
 
 /// What the side panel shows.
-enum SidePanel { none, queue, lyrics }
+enum SidePanel { none, queue, lyrics, nowPlaying }
 
 double _pref(String k, double d) => prefs.getDouble(k) ?? d;
 
@@ -76,7 +81,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   late double _side = _pref('sidebarWidth', 248).clamp(200, 360);
   late double _panel = _pref('panelWidth', 360).clamp(280, 520);
   late SidePanel _shown = SidePanel.values.firstWhere(
-    (p) => p.name == prefs.getString('sidePanel'),
+    // debug builds can open with a panel (visual checks: ENCORE_PANEL=nowPlaying)
+    (p) => p.name == ((kDebugMode ? Platform.environment['ENCORE_PANEL'] : null) ?? prefs.getString('sidePanel')),
     orElse: () => SidePanel.none,
   );
 
@@ -118,9 +124,18 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   }
 
   void _show(SidePanel p) {
+    // a window too narrow for a panel: Now playing is the full-screen player instead
+    if (!_panelFits && p != SidePanel.none) {
+      if (p == SidePanel.nowPlaying && audioHandler.mediaItem.value != null) context.push('/player');
+      return;
+    }
     setState(() => _shown = _shown == p ? SidePanel.none : p);
     prefs.setString('sidePanel', _shown.name);
   }
+
+  /// The page keeps at least this much room; below it the side panel stays hidden.
+  static const _minPage = 520.0;
+  bool get _panelFits => MediaQuery.sizeOf(context).width - _side - _panel - 32 >= _minPage;
 
   void _run(String id) {
     final h = audioHandler;
@@ -164,6 +179,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         _show(SidePanel.queue);
       case 'lyrics':
         _show(SidePanel.lyrics);
+      case 'nowPlaying':
+        _show(SidePanel.nowPlaying);
       case 'devices':
         showDevicesSheet(context);
       case 'goBack':
@@ -227,7 +244,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                       ),
                     ),
                   ),
-                  if (_shown != SidePanel.none) ...[
+                  if (_shown != SidePanel.none && _panelFits) ...[
                     _Splitter(
                       onDrag: (dx) {
                         setState(() => _panel = (_panel - dx).clamp(280, 520));
@@ -238,6 +255,11 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                       width: _panel,
                       child: _Pane(
                         child: switch (_shown) {
+                          SidePanel.nowPlaying => NowPlayingPanel(
+                            onClose: () => _show(SidePanel.nowPlaying),
+                            onQueue: () => _show(SidePanel.queue),
+                            onLyrics: () => _show(SidePanel.lyrics),
+                          ),
                           SidePanel.queue => SongDropTarget(
                             radius: 12,
                             onDrop: (songs) => dropOnQueue(context, songs),
@@ -368,70 +390,70 @@ class _Sidebar extends ConsumerWidget {
         Expanded(
           child: _GutterScroll(
             builder: (ctl) => ListView(
-            controller: ctl,
-            // the rows stop short of the edge: the scrollbar has its own lane beside them
-            padding: const EdgeInsets.only(bottom: 8, right: 10),
-            children: [
-              for (final i in sideSections) item(i),
-              header('Your library'),
-              SongDropTarget(
-                onDrop: (songs) => dropOnLiked(context, ref, songs),
-                child: item(
-                  const SideItem('Liked songs', Icons.favorite_rounded, '/liked'),
-                  leading: Icon(Icons.favorite_rounded, size: 20, color: cs.primary),
-                ),
-              ),
-              for (final p in pins)
-                GestureDetector(
-                  onSecondaryTap: () => showCollectionMenu(
-                    context,
-                    ref,
-                    p.name,
-                    () async => p.kind == 'album'
-                        ? (await ref.read(repoProvider).album(p.id)).songs
-                        : (await ref.read(repoProvider).playlist(p.id)).songs,
-                    pin: p,
+              controller: ctl,
+              // the rows stop short of the edge: the scrollbar has its own lane beside them
+              padding: const EdgeInsets.only(bottom: 8, right: 10),
+              children: [
+                for (final i in sideSections) item(i),
+                header('Your library'),
+                SongDropTarget(
+                  onDrop: (songs) => dropOnLiked(context, ref, songs),
+                  child: item(
+                    const SideItem('Liked songs', Icons.favorite_rounded, '/liked'),
+                    leading: Icon(Icons.favorite_rounded, size: 20, color: cs.primary),
                   ),
-                  child: p.kind == 'playlist'
-                      ? SongDropTarget(
-                          onDrop: (songs) => dropOnPlaylist(context, ref, p.id, p.name, songs),
-                          child: item(
+                ),
+                for (final p in pins)
+                  GestureDetector(
+                    onSecondaryTap: () => showCollectionMenu(
+                      context,
+                      ref,
+                      p.name,
+                      () async => p.kind == 'album'
+                          ? (await ref.read(repoProvider).album(p.id)).songs
+                          : (await ref.read(repoProvider).playlist(p.id)).songs,
+                      pin: p,
+                    ),
+                    child: p.kind == 'playlist'
+                        ? SongDropTarget(
+                            onDrop: (songs) => dropOnPlaylist(context, ref, p.id, p.name, songs),
+                            child: item(
+                              SideItem(p.name, Icons.push_pin_rounded, '/${p.kind}/${p.id}'),
+                              leading: Cover(p.cover, size: 22, radius: 5),
+                            ),
+                          )
+                        : item(
                             SideItem(p.name, Icons.push_pin_rounded, '/${p.kind}/${p.id}'),
                             leading: Cover(p.cover, size: 22, radius: 5),
                           ),
-                        )
-                      : item(
-                          SideItem(p.name, Icons.push_pin_rounded, '/${p.kind}/${p.id}'),
-                          leading: Cover(p.cover, size: 22, radius: 5),
+                  ),
+                ...switch (ref.watch(playlistsProvider).value) {
+                  final lists? when lists.isNotEmpty => [
+                    header('Playlists'),
+                    for (final pl in lists.where((pl) => !pins.any((p) => p.kind == 'playlist' && p.id == pl.id)))
+                      GestureDetector(
+                        onSecondaryTap: () => showCollectionMenu(
+                          context,
+                          ref,
+                          pl.name,
+                          () async => (await ref.read(repoProvider).playlist(pl.id)).songs,
+                          pin: LibraryPin('playlist', pl.id, pl.name, cover: pl.coverArt, subtitle: 'Playlist'),
                         ),
-                ),
-              ...switch (ref.watch(playlistsProvider).value) {
-                final lists? when lists.isNotEmpty => [
-                  header('Playlists'),
-                  for (final pl in lists.where((pl) => !pins.any((p) => p.kind == 'playlist' && p.id == pl.id)))
-                    GestureDetector(
-                      onSecondaryTap: () => showCollectionMenu(
-                        context,
-                        ref,
-                        pl.name,
-                        () async => (await ref.read(repoProvider).playlist(pl.id)).songs,
-                        pin: LibraryPin('playlist', pl.id, pl.name, cover: pl.coverArt, subtitle: 'Playlist'),
-                      ),
-                      child: SongDropTarget(
-                        onDrop: (songs) => dropOnPlaylist(context, ref, pl.id, pl.name, songs),
-                        child: item(
-                          SideItem(pl.name, Icons.queue_music_rounded, '/playlist/${pl.id}'),
-                          leading: Cover(pl.coverArt, size: 22, radius: 5, icon: Icons.queue_music_rounded),
+                        child: SongDropTarget(
+                          onDrop: (songs) => dropOnPlaylist(context, ref, pl.id, pl.name, songs),
+                          child: item(
+                            SideItem(pl.name, Icons.queue_music_rounded, '/playlist/${pl.id}'),
+                            leading: Cover(pl.coverArt, size: 22, radius: 5, icon: Icons.queue_music_rounded),
+                          ),
                         ),
                       ),
-                    ),
-                ],
-                _ => const <Widget>[],
-              },
-              header('Browse'),
-              for (final i in sideLibrary) item(i),
-            ],
-          ),
+                  ],
+                  _ => const <Widget>[],
+                },
+                header('Browse'),
+                for (final i in sideLibrary) item(i),
+              ],
+            ),
           ),
         ),
         if (online.isNotEmpty)
@@ -654,43 +676,59 @@ class PlayerBar extends ConsumerWidget {
             // volume and panels
             Expanded(
               flex: 3,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                    tooltip: 'Lyrics (Ctrl+Shift+L)',
-                    icon: Icon(Icons.lyrics_outlined, size: 20, color: on(panel == SidePanel.lyrics)),
-                    onPressed: () => onPanel(SidePanel.lyrics),
-                  ),
-                  IconButton(
-                    tooltip: 'Queue (Ctrl+Shift+Q)',
-                    icon: Icon(Icons.queue_music_rounded, size: 20, color: on(panel == SidePanel.queue)),
-                    onPressed: () => onPanel(SidePanel.queue),
-                  ),
-                  ValueListenableBuilder<CastInfo?>(
-                    valueListenable: castInfo,
-                    builder: (ctx, info, _) => IconButton(
-                      tooltip: info == null ? 'Your devices (Ctrl+D)' : 'Playing on ${info.name}',
-                      icon: Icon(
-                        info == null ? Icons.devices_rounded : Icons.cast_connected_rounded,
-                        size: 20,
-                        color: on(info != null),
-                      ),
-                      onPressed: () => showDevicesSheet(ctx),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: IconButtonTheme(
+                  // compact buttons, so they all fit beside the volume
+                  data: IconButtonThemeData(style: IconButton.styleFrom(visualDensity: VisualDensity.compact)),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          tooltip: 'Now playing (Ctrl+Shift+N)',
+                          icon: Icon(Icons.view_sidebar_outlined, size: 20, color: on(panel == SidePanel.nowPlaying)),
+                          onPressed: () => onPanel(SidePanel.nowPlaying),
+                        ),
+                        IconButton(
+                          tooltip: 'Lyrics (Ctrl+Shift+L)',
+                          icon: Icon(Icons.lyrics_outlined, size: 20, color: on(panel == SidePanel.lyrics)),
+                          onPressed: () => onPanel(SidePanel.lyrics),
+                        ),
+                        IconButton(
+                          tooltip: 'Queue (Ctrl+Shift+Q)',
+                          icon: Icon(Icons.queue_music_rounded, size: 20, color: on(panel == SidePanel.queue)),
+                          onPressed: () => onPanel(SidePanel.queue),
+                        ),
+                        ValueListenableBuilder<CastInfo?>(
+                          valueListenable: castInfo,
+                          builder: (ctx, info, _) => IconButton(
+                            tooltip: info == null ? 'Your devices (Ctrl+D)' : 'Playing on ${info.name}',
+                            icon: Icon(
+                              info == null ? Icons.devices_rounded : Icons.cast_connected_rounded,
+                              size: 20,
+                              color: on(info != null),
+                            ),
+                            onPressed: () => showDevicesSheet(ctx),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Sound',
+                          icon: Icon(Icons.tune_rounded, size: 20, color: cs.onSurfaceVariant),
+                          onPressed: () => showSoundPanel(context, ref),
+                        ),
+                        const _Volume(),
+                        IconButton(
+                          tooltip: 'Full-screen player (Ctrl+P)',
+                          icon: Icon(Icons.open_in_full_rounded, size: 18, color: cs.onSurfaceVariant),
+                          onPressed: () => context.push('/player'),
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    tooltip: 'Sound',
-                    icon: Icon(Icons.tune_rounded, size: 20, color: cs.onSurfaceVariant),
-                    onPressed: () => showSoundPanel(context, ref),
-                  ),
-                  const _Volume(),
-                  IconButton(
-                    tooltip: 'Full-screen player (Ctrl+P)',
-                    icon: Icon(Icons.open_in_full_rounded, size: 18, color: cs.onSurfaceVariant),
-                    onPressed: () => context.push('/player'),
-                  ),
-                ],
+                ),
               ),
             ),
           ],

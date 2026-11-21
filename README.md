@@ -65,6 +65,8 @@ ever takes an APK, and the desktop's only its own archive.
 - Colours from Plasma's accent colour (Settings › Appearance › Colour from wallpaper), or the album art, or yours.
 - Sound: equalizer, speed and pitch, skip silence, ReplayGain and crossfade as on the phone, an output device
   picker (PipeWire), and Encore's own volume (also in Plasma's volume applet as "Encore").
+- A **Now playing** panel beside the page (the button in the player bar, or Ctrl+Shift+N): the cover, the song
+  and artist, about the artist, up next and the song's details.
 - Notifications for new podcast episodes; downloads for offline play; Chromecast (the computer streams to the
   speaker on port 4547: on Fedora let it through with
   `sudo firewall-cmd --add-port=4547/tcp`, add `--permanent` to keep it).
