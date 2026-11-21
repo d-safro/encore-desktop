@@ -1,11 +1,11 @@
 # Builds the desktop apps: Linux (archive, RPM, .deb, Arch package) and Windows (setup program, portable
 # zip). Each package is installed in a clean container and started with --version before anything is
 # attached. Pushing a v* tag attaches the files to that release (made as a draft if it isn't there yet);
-# running it by hand ("Run workflow") only builds them, as downloadable artifacts.
+# a ci-* tag, or running it by hand ("Run workflow"), only builds them, as downloadable artifacts.
 name: Desktop builds
 on:
   push:
-    tags: ['v*']
+    tags: ['v*', 'ci-*']
   workflow_dispatch:
 
 permissions:
