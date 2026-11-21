@@ -18,6 +18,8 @@ Requires:       gtk3
 Requires:       mpv-libs
 Requires:       libsecret
 Requires:       libayatana-appindicator-gtk3
+# the Now playing panel's waveform (without it the seek bar is plain)
+Recommends:     ffmpeg-free
 
 %description
 Encore plays your own music library from a Navidrome (or any Subsonic / OpenSubsonic) server: podcasts,
