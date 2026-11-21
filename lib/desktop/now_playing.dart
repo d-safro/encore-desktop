@@ -11,7 +11,6 @@ import '../playback/handler.dart';
 import '../ui/actions.dart';
 import '../ui/state.dart';
 import '../ui/widgets.dart';
-import 'waveform.dart';
 
 /// The desktop's "Now playing" panel (like Spotify's): where the music comes from, a big cover, the song
 /// and artist, about the artist, what's up next, and the song's details. It sits beside the page, in the
@@ -133,10 +132,7 @@ class NowPlayingPanel extends ConsumerWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    // the song's waveform, as its seek bar
-                    const WaveformSeekBar(),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       children: [

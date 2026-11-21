@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -15,7 +14,6 @@ import 'package:encore/data/updates.dart';
 import 'package:encore/desktop/desktop.dart';
 import 'package:encore/desktop/desktop_settings.dart';
 import 'package:encore/desktop/shortcuts.dart';
-import 'package:encore/desktop/waveform.dart';
 import 'package:encore/playback/desktop_audio.dart';
 
 void main() {
@@ -176,18 +174,6 @@ void main() {
       File('${tmp.path}/icons/hicolor/256x256/apps/dev.safro.encore.png').createSync(recursive: true);
       expect(appIconInstalled([tmp.path]), isTrue);
       tmp.deleteSync(recursive: true);
-    });
-
-    test('a waveform: loud parts tall, quiet parts short, the loudest at 1', () {
-      // two seconds of quiet, then two of loud
-      final pcm = Int16List.fromList([...List.filled(2000, 500), ...List.filled(2000, 20000)]);
-      final peaks = peaksFromPcm(pcm, 4);
-      expect(peaks.length, 4);
-      expect(peaks[2], 1.0);
-      expect(peaks[3], 1.0);
-      expect(peaks[0], lessThan(0.5));
-      expect(peaksFromPcm(Int16List(0)), isEmpty);
-      expect(peaksFromPcm(Int16List(100), 4), everyElement(0.05)); // silence: a flat line
     });
 
     test('names link to the right pages', () {
