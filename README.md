@@ -161,6 +161,9 @@ the setup program.
   restart and kept on the server (continue in another app or device).
 - Shuffle, repeat, speed and pitch, skip silence, sleep timer (minutes or end of song).
 - Crossfade (up to 12 s); albums played in order stay seamless unless you choose otherwise.
+- Automix (Settings › Playback): the next song comes in where this one starts to fade, blending for 4 bars at its
+  tempo (2–12 s); silence at the end of a song and at the start of the next is cut. Your server measures each
+  song (mix-analyzer, the songs in your queue first); songs it hasn't measured use the crossfade.
 - Cast to Chromecast / Google Cast speakers and TVs on your Wi-Fi. The phone stays the remote and passes
   the music along, so it works even when the speaker can't reach your server (e.g. a Tailscale-only server).
 - ReplayGain (track / album / automatic, pre-amp, peak protection), 5-band equalizer with presets.
