@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -135,7 +137,7 @@ Future<void> showShortcutsHelp(BuildContext context) => showDialog(
                 ),
               const SizedBox(height: 8),
               Text(
-                'The keyboard\'s media keys and Plasma\'s media controls work too, even when Encore is in the tray.',
+                'The keyboard\'s media keys and ${Platform.isWindows ? 'Windows\'' : 'Plasma\'s'} media controls work too, even when Encore is in the tray.',
                 style: t.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],

@@ -2,7 +2,7 @@
 
 # Encore
 
-A music player for Android and the Linux desktop (made for Fedora with KDE Plasma) that plays your **Navidrome** (or any Subsonic / OpenSubsonic) library. Dark,
+A music player for Android, the Linux desktop (made for Fedora with KDE Plasma) and Windows that plays your **Navidrome** (or any Subsonic / OpenSubsonic) library. Dark,
 minimalist, Material You. It can also show and fetch music you *don't* have yet, and recommend songs by how they
 sound, when the server has the extras described below.
 
@@ -30,36 +30,71 @@ downloads, queue and pins.
 Encore checks GitHub for new versions (about twice a day, can be switched off) and offers to install them; the
 download is checked against the release's `SHA256SUMS.txt`. Android asks once to let Encore install updates.
 
-## Desktop app (Linux)
+## Desktop app (Linux and Windows)
 
-The same app for your computer, made for Fedora with KDE Plasma (any desktop with a system tray works). Every
-release on the [Releases](../../releases/latest) page has, next to the APKs:
+The same app for your computer, made for Fedora with KDE Plasma (any Linux desktop with a system tray works,
+and Windows 10 or 11). Every release on the [Releases](../../releases/latest) page has, next to the APKs:
 
 | File | For |
 |---|---|
 | `encore-<version>-linux-x86_64.tar.gz` | any Linux on a 64-bit PC: install it for yourself, no password needed, and Encore updates itself |
-| `encore-<version>-1.fc44.x86_64.rpm` | Fedora: install it for every user with dnf |
+| `encore-<version>-1.x86_64.rpm` | Fedora: install it for every user with dnf |
+| `encore_<version>_amd64.deb` | Debian 12+, Ubuntu 22.04+, Linux Mint and the like: install it with apt |
+| `encore-bin-<version>-1-x86_64.pkg.tar.zst` and `PKGBUILD` | Arch Linux, Manjaro, EndeavourOS: install it with pacman |
+| `encore-<version>-windows-x64-setup.exe` | Windows 10 / 11: installs for you (no administrator), and Encore updates itself |
+| `encore-<version>-windows-x64.zip` | Windows, portable: unpack anywhere and run `encore.exe` (update it by hand) |
 
-For yourself (unpack, then run the installer in the folder; `./install.sh --uninstall` removes it again):
+**Linux, for yourself** (unpack, then run the installer in the folder; `./install.sh --uninstall` removes it again):
 
 ```bash
 tar xf encore-*-linux-x86_64.tar.gz && encore-*-linux-x86_64/install.sh
 ```
 
-Or with dnf:
+It needs mpv's library for sound (`mpv-libs` on Fedora, `libmpv2` on Debian and Ubuntu, `mpv` on Arch).
+
+**Fedora:**
 
 ```bash
 sudo dnf install ./encore-*.x86_64.rpm
 ```
 
-It needs mpv's library for sound (`mpv-libs` on Fedora; the RPM brings it in). The phone's update check only
-ever takes an APK, and the desktop's only its own archive.
+**Debian, Ubuntu, Mint:**
+
+```bash
+sudo apt install ./encore_*_amd64.deb
+```
+
+**Arch:** install the package from the release, or build it yourself from the release's `PKGBUILD` (it
+repackages the Linux archive):
+
+```bash
+sudo pacman -U encore-bin-*-x86_64.pkg.tar.zst
+```
+
+```bash
+makepkg -si
+```
+
+Run the second one in a folder with only the `PKGBUILD`.
+
+A copy installed by dnf, apt or pacman is updated by them too: when there's a new version, Encore shows the
+command to run.
+
+**Windows:** run the setup program. It puts Encore in your Start menu (and, if you tick it, on the desktop and
+in the tray at log-in). Windows may warn that the app is from an unknown publisher, since the builds aren't
+code-signed: choose *More info › Run anyway*. Settings › About › Check for updates downloads the next setup
+program and runs it for you. Uninstall it from Windows' Settings › Apps; your music, settings and downloads
+stay in `%APPDATA%\Encore`.
+
+The phone's update check only ever takes an APK, the Linux one only its own archive, and the Windows one only
+the setup program.
 
 **On the desktop**
 - Every page from the phone, in a window made for a mouse and keyboard: a sidebar with your sections, liked
   songs and pins; a resizable side panel for the queue or lyrics; a player bar with volume along the bottom;
   right-click for the menus a long-press opens on the phone. The full-screen player is the phone's.
 - Plasma's media controls, the lock screen, the keyboard's media keys and KDE Connect control Encore (MPRIS).
+  On Windows: the media flyout by the volume, the lock screen and the media keys.
 - A tray icon: left click shows or hides the window, right click for play / pause, next and quit. Closing the
   window keeps the music playing in the tray (Settings › Desktop). "Start when you log in" starts it in the tray.
 - Colours from Plasma's accent colour (Settings › Appearance › Colour from wallpaper), or the album art, or yours.
@@ -72,6 +107,8 @@ ever takes an APK, and the desktop's only its own archive.
   volume, Ctrl+F search, Ctrl+L like, Ctrl+S shuffle, Ctrl+R repeat, Ctrl+P full-screen player, Ctrl+Shift+Q
   queue, Ctrl+Shift+L lyrics, Ctrl+D devices, Alt+← back, Ctrl+, settings, Ctrl+1…6 sections, Ctrl+Q quit
   (Settings › Desktop › Keyboard shortcuts).
+- Windows: the same app, with the window, tray, media controls, notifications, sound settings and "Start when
+  you log in" done the Windows way. The output-device picker lists Windows' devices.
 - Not on the desktop: the home-screen widget (Plasma's media applet does that), Android Auto, the app icon
   choice, and USB-cable mode. If the computer runs your server, give it the server's own address in Settings ›
   Server › Address on your home network (e.g. `http://127.0.0.1:4540` with the server extras).
@@ -224,10 +261,18 @@ libayatana-appindicator-gtk3-devel lld rpm-build inkscape`):
 ```bash
 flutter run -d linux                 # try it
 tools/linux/build.sh                 # dist/: the .tar.gz, the .rpm and SHA256SUMS-linux.txt
+tools/linux/build.sh --deb --arch    # also the .deb and the Arch package (in podman/docker containers)
 ```
 
-For a release, add the lines of `dist/SHA256SUMS-linux.txt` to the release's `SHA256SUMS.txt` and upload the
-two files next to the APKs. Release builds are signed with the key described in
+The Windows app can only be built on Windows (Flutter, Visual Studio's C++ tools, Rust and Inno Setup 6):
+`powershell -File tools\windows\build.ps1` makes the setup program and the portable zip in `dist\`.
+
+GitHub Actions builds both (`.github/workflows/desktop.yml`): every Linux package is installed in a clean
+Debian, Arch or Fedora container and started before anything is attached, and the Windows setup program is
+installed and started on a Windows runner. Pushing a `v*` tag attaches all the desktop files to that release
+(it's made as a draft if it isn't there yet), and "Run workflow" on the Actions page builds them without
+releasing. `tools/release/upload.sh v<version> <files>` attaches files from here (the signed APKs) and keeps
+the release's `SHA256SUMS.txt` whole. Release builds are signed with the key described in
 `android/key.properties`, or the file named by the `ENCORE_KEY_PROPERTIES` environment variable:
 
 ```properties
@@ -255,6 +300,10 @@ lib/
 linux/                        the GTK runner (one window; a second launch shows it; --hidden starts in the tray)
 packages/just_audio_mpv/      just_audio on libmpv, with the equalizer and other filters (from just_audio_media_kit)
 tools/linux/                  .desktop entry, metainfo, install.sh, RPM spec, build.sh
+tools/debian/, tools/arch/    the .deb and the Arch package, made from the Linux archive
+tools/windows/                the Windows setup program (Inno Setup) and build.ps1
+windows/                      the Windows runner (one window; a second launch shows it; --hidden starts in the tray)
+packages/audio_service_smtc/  Windows' media controls for audio_service (through smtc_windows)
 android/app/src/main/kotlin   audio-device channel, home-screen widget, keep-running-while-downloading service
 tools/encore-usb.sh           run on the server's computer: downloads over a USB cable (adb reverse)
 ```

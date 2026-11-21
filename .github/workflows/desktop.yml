@@ -1,0 +1,98 @@
+# Builds the desktop apps: Linux (archive, RPM, .deb, Arch package) and Windows (setup program, portable
+# zip). Each package is installed in a clean container and started with --version before anything is
+# attached. Pushing a v* tag attaches the files to that release (made as a draft if it isn't there yet);
+# running it by hand ("Run workflow") only builds them, as downloadable artifacts.
+name: Desktop builds
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libmpv-dev libsecret-1-dev \
+            libayatana-appindicator3-dev lld liblzma-dev rpm librsvg2-bin
+      - run: flutter pub get
+      - name: Archive, RPM, .deb and Arch package
+        run: tools/linux/build.sh --deb --arch
+      - name: The .deb installs and starts on Debian
+        run: |
+          docker run --rm -v "$PWD/dist:/dist" debian:stable-slim bash -c '
+            apt-get update -qq && apt-get install -y -qq /dist/encore_*.deb >/dev/null && encore --version'
+      - name: The Arch package installs and starts on Arch
+        run: |
+          docker run --rm -v "$PWD/dist:/dist" archlinux:latest bash -c '
+            pacman -Syu --noconfirm -q >/dev/null && pacman -U --noconfirm /dist/encore-bin-*.pkg.tar.zst >/dev/null && encore --version'
+      - name: The RPM installs and starts on Fedora
+        run: |
+          docker run --rm -v "$PWD/dist:/dist" fedora:latest bash -c '
+            dnf install -y -q /dist/encore-*.rpm >/dev/null && encore --version'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            dist/*.tar.gz
+            dist/*.rpm
+            dist/*.deb
+            dist/*.pkg.tar.zst
+            dist/PKGBUILD
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Inno Setup
+        shell: pwsh
+        run: if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+      - run: flutter pub get
+      - name: Setup program and portable zip
+        shell: pwsh
+        run: tools\windows\build.ps1
+      - name: The setup program installs quietly and Encore starts
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist\*-setup.exe | Select-Object -First 1
+          $p = Start-Process $setup.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "setup failed ($($p.ExitCode))" }
+          $exe = "$env:LOCALAPPDATA\Programs\Encore\encore.exe"
+          $p = Start-Process $exe -ArgumentList '--version' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "encore.exe --version failed ($($p.ExitCode))" }
+          if (-not (Test-Path "$env:LOCALAPPDATA\Programs\Encore\unins000.exe")) { throw 'no uninstaller: updates would not work' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            dist/*.exe
+            dist/*.zip
+
+  attach:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, windows]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/release/upload.sh "${GITHUB_REF_NAME}" dist/*.tar.gz dist/*.rpm dist/*.deb dist/*.pkg.tar.zst dist/PKGBUILD dist/*.exe dist/*.zip

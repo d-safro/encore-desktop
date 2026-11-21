@@ -1,0 +1,22 @@
+name: audio_service_smtc
+description: audio_service on Windows through the system media controls (SMTC), using package:smtc_windows.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ">=3.1.3 <4.0.0"
+  flutter: ">=3.3.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  audio_service_platform_interface: ^0.1.3
+  smtc_windows: ^1.1.0
+
+flutter:
+  plugin:
+    implements: audio_service_platform_interface
+    platforms:
+      windows:
+        dartPluginClass: AudioServiceSmtc
+        fileName: audio_service_smtc.dart

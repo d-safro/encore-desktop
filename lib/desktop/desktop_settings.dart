@@ -7,13 +7,25 @@ import 'package:path/path.dart' as p;
 import 'desktop.dart';
 import 'shortcuts.dart';
 
-/// Start Encore when you log in (in the tray, no window): a standard XDG autostart entry, only while this
-/// switch is on.
+/// Start Encore when you log in (in the tray, no window): a standard XDG autostart entry on Linux, only
+/// while this switch is on.
 File _autostartFile() =>
     File(p.join(Platform.environment['XDG_CONFIG_HOME'] ?? p.join(Platform.environment['HOME'] ?? '', '.config'),
         'autostart', 'dev.safro.encore.desktop'));
 
-bool autostartOn() => _autostartFile().existsSync();
+// Windows keeps the same switch in the registry: the "Run" list of your own account.
+const _runKey = r'HKCU\Software\Microsoft\Windows\CurrentVersion\Run';
+
+bool autostartOn() {
+  if (Platform.isWindows) {
+    try {
+      return Process.runSync('reg', ['query', _runKey, '/v', 'Encore']).exitCode == 0;
+    } catch (_) {
+      return false;
+    }
+  }
+  return _autostartFile().existsSync();
+}
 
 /// The autostart entry's text for the app at [exe].
 String autostartEntry(String exe) => '''[Desktop Entry]
@@ -27,6 +39,12 @@ X-GNOME-Autostart-enabled=true
 ''';
 
 Future<void> setAutostart(bool on) async {
+  if (Platform.isWindows) {
+    await Process.run('reg', on
+        ? ['add', _runKey, '/v', 'Encore', '/t', 'REG_SZ', '/d', '"${Platform.resolvedExecutable}" --hidden', '/f']
+        : ['delete', _runKey, '/v', 'Encore', '/f']);
+    return;
+  }
   final f = _autostartFile();
   if (on) {
     await f.parent.create(recursive: true);
