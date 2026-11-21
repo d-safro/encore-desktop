@@ -244,6 +244,8 @@ the setup program.
 
 **Your stuff**
 - Hearts, 1–5 star ratings, playlists (create, add, rename, reorder, remove, delete), scrobbling.
+- Invite to edit (a playlist's menu): a link like Jam's lets friends add songs from your library to that playlist
+  on a web page, and take out the ones they added; it works until you stop it (or 30 days).
 - Private session (Settings, or the devices sheet in the player): for up to 6 hours nothing you play is
   scrobbled, counted in stats, shown as "now playing" (Discord) or learned by autoplay. A lock in the player shows it.
 - Add a whole album to a playlist (album page, long-press or right-click on an album): asks before adding songs
