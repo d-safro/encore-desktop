@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show SingleActivator;
 import 'package:flutter_test/flutter_test.dart';
@@ -162,6 +164,14 @@ void main() {
       expect(byId['search']!.whileTyping, isTrue);
       final q = byId['quit']!.activators.single as SingleActivator;
       expect((q.trigger, q.control, q.shift), (LogicalKeyboardKey.keyQ, true, false));
+    });
+
+    test("the app's icon is found where an installer puts it", () {
+      final tmp = Directory.systemTemp.createTempSync('encore-icons');
+      expect(appIconInstalled([tmp.path]), isFalse);
+      File('${tmp.path}/icons/hicolor/256x256/apps/dev.safro.encore.png').createSync(recursive: true);
+      expect(appIconInstalled([tmp.path]), isTrue);
+      tmp.deleteSync(recursive: true);
     });
 
     test('logs never carry the login', () {

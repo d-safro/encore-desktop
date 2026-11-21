@@ -5,6 +5,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:audio_service_mpris/audio_service_mpris.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart' show Rect, Size, debugPrint;
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:just_audio_mpv/just_audio_mpv.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
@@ -200,7 +201,59 @@ Future<void> _songNotification(MediaItem m) async {
   } catch (_) {}
 }
 
+// ── The app's icon ──
+
+const appIconName = 'dev.safro.encore';
+
+String _dataHome() =>
+    Platform.environment['XDG_DATA_HOME'] ?? p.join(Platform.environment['HOME'] ?? '', '.local', 'share');
+
+/// Where icon themes live (your own first, then the system's).
+List<String> _dataDirs() => [
+  _dataHome(),
+  ...(Platform.environment['XDG_DATA_DIRS'] ?? '/usr/local/share:/usr/share').split(':').where((d) => d.isNotEmpty),
+];
+
+/// Is Encore's icon installed where the desktop looks (by the RPM, install.sh, or an earlier run)?
+bool appIconInstalled([List<String>? dirs]) {
+  for (final d in dirs ?? _dataDirs()) {
+    for (final size in const ['64x64', '128x128', '256x256', '512x512', '48x48']) {
+      if (File(p.join(d, 'icons', 'hicolor', size, 'apps', '$appIconName.png')).existsSync()) return true;
+    }
+    if (File(p.join(d, 'icons', 'hicolor', 'scalable', 'apps', '$appIconName.svg')).existsSync()) return true;
+  }
+  return false;
+}
+
+/// The icon's name for the tray and windows. A build run straight from its folder has no installed icon:
+/// then the logo goes into your own icon folder (~/.local/share/icons), as an installer would put it.
+Future<String> ensureAppIcon() async {
+  if (appIconInstalled()) return appIconName;
+  final assets = p.join(p.dirname(Platform.resolvedExecutable), 'data', 'flutter_assets', 'assets', 'icons');
+  try {
+    for (final size in const [64, 256]) {
+      final dir = Directory(p.join(_dataHome(), 'icons', 'hicolor', '${size}x$size', 'apps'));
+      await dir.create(recursive: true);
+      await File(p.join(assets, 'logo-$size.png')).copy(p.join(dir.path, '$appIconName.png'));
+    }
+    return appIconName;
+  } catch (_) {
+    return p.join(assets, 'logo-256.png'); // the file itself, if the icon folder can't be written
+  }
+}
+
 // ── The tray icon (StatusNotifierItem, shown in Plasma's system tray) ──
+
+/// tray_manager's own setIcon turns every icon into a file path inside the app, which Plasma's tray doesn't
+/// draw (it shows a generic icon). Its native side takes the icon as given, so Encore hands it the icon's
+/// name; the id stays the same between runs, so Plasma remembers where the icon goes in the tray.
+Future<void> _setTrayIcon(String icon) => const MethodChannel('tray_manager').invokeMethod('setIcon', {
+  'id': appIconName,
+  'iconPath': icon,
+  'isTemplate': false,
+  'iconPosition': 'left',
+  'iconSize': 18,
+});
 
 class _Tray with TrayListener {
   _Tray(this.handler);
@@ -210,15 +263,8 @@ class _Tray with TrayListener {
   bool _playing = false;
 
   Future<void> start() async {
-    final icon = p.join(
-      p.dirname(Platform.resolvedExecutable),
-      'data',
-      'flutter_assets',
-      'assets',
-      'icons',
-      'script.png',
-    );
-    await trayManager.setIcon(icon);
+    // Plasma's tray draws icons it can look up by name (not a file path): Encore's own icon
+    await _setTrayIcon(await ensureAppIcon());
     trayManager.addListener(this);
     handler.mediaItem.listen((m) {
       _item = m;

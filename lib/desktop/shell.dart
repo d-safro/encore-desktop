@@ -523,7 +523,7 @@ class PlayerBar extends ConsumerWidget {
                 children: [
                   MouseRegion(
                     cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
+                    child: Tappable(
                       onTap: () => context.push('/player'),
                       child: Hero(
                         tag: 'cover',
@@ -713,7 +713,7 @@ class _LinkState extends State<_Link> {
     cursor: widget.onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
     onEnter: (_) => setState(() => _hover = true),
     onExit: (_) => setState(() => _hover = false),
-    child: GestureDetector(
+    child: Tappable(
       onTap: widget.onTap,
       child: Text(
         widget.text,
