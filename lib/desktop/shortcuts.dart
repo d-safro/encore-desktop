@@ -34,6 +34,9 @@ final desktopShortcuts = <DesktopShortcut>[
   const DesktopShortcut('lyrics', 'Ctrl+Shift+L', 'Show / hide the lyrics', [
     SingleActivator(LogicalKeyboardKey.keyL, control: _c, shift: true),
   ], whileTyping: true),
+  const DesktopShortcut('nowPlaying', 'Ctrl+Shift+N', 'Show / hide Now playing', [
+    SingleActivator(LogicalKeyboardKey.keyN, control: _c, shift: true),
+  ], whileTyping: true),
   const DesktopShortcut('devices', 'Ctrl+D', 'Your devices', [SingleActivator(LogicalKeyboardKey.keyD, control: _c)], whileTyping: true),
   const DesktopShortcut('goBack', 'Alt+← or Esc', 'Go back', [
     SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true),
