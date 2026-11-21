@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:audio_service/audio_service.dart';
@@ -7,17 +8,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/platform.dart';
 import 'core/settings.dart';
 import 'data/account.dart';
 import 'data/cover_cache.dart';
 import 'data/db.dart';
+import 'data/devices.dart';
 import 'data/jam.dart';
 import 'data/library.dart';
+import 'desktop/desktop.dart';
 import 'playback/handler.dart';
 import 'playback/widget_sync.dart';
 
-Future<void> main() async {
+Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (isDesktop) {
+    readArgs(args);
+    await initDesktopPlatform(); // mpv, SQLite, MPRIS: before the first database or player
+  }
   // Errors are logged, never fatal: a failed request or a broken image must not take the app down.
   FlutterError.onError = (d) => FlutterError.presentError(d);
   PlatformDispatcher.instance.onError = (e, st) {
@@ -26,6 +34,7 @@ Future<void> main() async {
     return true;
   };
   prefs = await SharedPreferences.getInstance();
+  if (isDesktop) await initWindow();
   libraryDb = await LibraryDb.open(file: await currentDbFile()); // each server has its own copy
 
   final container = ProviderContainer();
@@ -55,7 +64,11 @@ Future<void> main() async {
     ),
   );
 
-  startWidgetSync(audioHandler);
+  if (isDesktop) {
+    unawaited(startTray(audioHandler));
+  } else {
+    startWidgetSync(audioHandler); // the home-screen widget (Android)
+  }
   container.read(jamProvider); // picks up a Jam that was running when the app closed
 
   playerNotices.stream.listen((m) {
@@ -63,6 +76,7 @@ Future<void> main() async {
       ?..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(m), behavior: SnackBarBehavior.floating));
   });
+  if (isDesktop) beforeQuit = () => container.read(devicesProvider.notifier).bye();
   runApp(UncontrolledProviderScope(container: container, child: const EncoreApp()));
   // later, and only while the server answers: covers are fetched again as you browse
   Future.delayed(const Duration(seconds: 30), () {
