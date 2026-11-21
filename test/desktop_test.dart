@@ -25,6 +25,10 @@ void main() {
       'encore-1.8.0-universal.apk',
       'encore-1.8.0-linux-x86_64.tar.gz',
       'encore-1.8.0-1.fc44.x86_64.rpm',
+      'encore_1.8.0_amd64.deb',
+      'encore-bin-1.8.0-1-x86_64.pkg.tar.zst',
+      'encore-1.8.0-windows-x64-setup.exe',
+      'encore-1.8.0-windows-x64.zip',
       'SHA256SUMS.txt',
     ];
 
@@ -41,6 +45,56 @@ void main() {
       expect(pickLinuxAsset(['encore-1.8.0-x86_64.apk'], 'x86_64'), isNull);
       expect(pickRpm(assets, 'x86_64'), 'encore-1.8.0-1.fc44.x86_64.rpm');
       expect(pickRpm(assets, 'aarch64'), isNull);
+    });
+
+    test('each package kind finds only its own file', () {
+      expect(pickDeb(assets, 'x86_64'), 'encore_1.8.0_amd64.deb');
+      expect(pickDeb(assets, 'aarch64'), isNull);
+      expect(pickArchPackage(assets, 'x86_64'), 'encore-bin-1.8.0-1-x86_64.pkg.tar.zst');
+      expect(pickArchPackage(assets, 'aarch64'), isNull);
+      expect(pickWindowsAsset(assets), 'encore-1.8.0-windows-x64-setup.exe');
+      expect(pickWindowsAsset(assets.where((n) => !n.endsWith('.exe')).toList()), isNull);
+    });
+
+    test('the new Windows and package files never confuse the phone or the Linux updater', () {
+      const others = [
+        'encore_1.8.0_amd64.deb',
+        'encore-bin-1.8.0-1-x86_64.pkg.tar.zst',
+        'encore-1.8.0-windows-x64-setup.exe',
+        'encore-1.8.0-windows-x64.zip',
+      ];
+      expect(pickApk(others, ['x86_64', 'arm64-v8a']), isNull);
+      expect(pickLinuxAsset(others, 'x86_64'), isNull);
+      expect(pickRpm(others, 'x86_64'), isNull);
+    });
+
+    test('a system-installed copy is told the right command', () {
+      const u = UpdateInfo(
+        version: '1.8.0',
+        notes: '',
+        apkUrl: '',
+        apkName: '',
+        size: 0,
+        sumsUrl: '',
+        pageUrl: '',
+        rpmUrl: 'https://x/encore-1.8.0-1.fc44.x86_64.rpm',
+        debUrl: 'https://x/encore_1.8.0_amd64.deb',
+        archUrl: 'https://x/encore-bin-1.8.0-1-x86_64.pkg.tar.zst',
+      );
+      expect(systemUpdateCommand(u, 'rpm'), 'sudo dnf install https://x/encore-1.8.0-1.fc44.x86_64.rpm');
+      expect(systemUpdateCommand(u, 'deb'),
+          'cd /tmp && curl -LO https://x/encore_1.8.0_amd64.deb && sudo apt install ./encore_1.8.0_amd64.deb');
+      expect(systemUpdateCommand(u, 'arch'), 'sudo pacman -U https://x/encore-bin-1.8.0-1-x86_64.pkg.tar.zst');
+    });
+
+    test('how a Linux package was installed', () async {
+      final root = await Directory.systemTemp.createTemp('encore-pkg');
+      addTearDown(() => root.delete(recursive: true));
+      expect(linuxPackageKind(root: root.path), 'rpm');
+      await Directory('${root.path}/var/lib/pacman/local/encore-bin-1.8.0-1').create(recursive: true);
+      expect(linuxPackageKind(root: root.path), 'arch');
+      await File('${root.path}/var/lib/dpkg/info/encore.list').create(recursive: true);
+      expect(linuxPackageKind(root: root.path), 'deb');
     });
   });
 

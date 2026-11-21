@@ -1,0 +1,6 @@
+#!/bin/sh
+# Lets the menu and the icon theme forget Encore after removing it.
+set -e
+command -v update-desktop-database >/dev/null && update-desktop-database -q /usr/share/applications || true
+command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q /usr/share/icons/hicolor || true
+exit 0

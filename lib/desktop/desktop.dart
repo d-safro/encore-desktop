@@ -18,8 +18,9 @@ import '../core/settings.dart';
 import '../data/episode_alerts.dart' show notifications;
 import '../playback/handler.dart';
 
-/// The desktop app's pieces that the phone doesn't have: mpv for sound, SQLite through FFI, MPRIS for
-/// Plasma's media controls, the window (size remembered, close to the tray) and the tray icon.
+/// The desktop app's pieces that the phone doesn't have: mpv for sound, SQLite through FFI, the system's
+/// media controls (MPRIS on Linux, Windows' media flyout on Windows), the window (size remembered, close to
+/// the tray) and the tray icon.
 
 /// Song addresses carry the login (Subsonic token and salt): never write those to a log.
 String scrubLogin(String text) =>
@@ -36,6 +37,8 @@ Future<void> initDesktopPlatform() async {
   databaseFactory = databaseFactoryFfi;
   final dir = await getApplicationSupportDirectory();
   await databaseFactory.setDatabasesPath(p.join(dir.path, 'databases'));
+  // Windows: packages/audio_service_smtc registers itself and needs nothing here
+  if (!Platform.isLinux) return;
   // Plasma's media controls, lock screen, media keys and KDE Connect talk to Encore through MPRIS
   AudioServiceMpris.init(
     dBusName: 'encore',
@@ -75,7 +78,7 @@ class _WindowEvents with WindowListener {
             id: 7001,
             title: 'Encore is still running',
             body: 'It keeps playing in the system tray. Quit from the tray icon, or turn this off in Settings › Desktop.',
-            notificationDetails: const NotificationDetails(linux: LinuxNotificationDetails()),
+            notificationDetails: desktopNotification,
           );
         } catch (_) {}
       }
@@ -196,10 +199,16 @@ Future<void> _songNotification(MediaItem m) async {
       id: 7002, // the same id each time: the new song replaces the last one
       title: m.title,
       body: [m.artist, m.album].whereType<String>().where((x) => x.isNotEmpty).join(' — '),
-      notificationDetails: const NotificationDetails(linux: LinuxNotificationDetails()),
+      notificationDetails: desktopNotification,
     );
   } catch (_) {}
 }
+
+/// How the desktop's notifications look (the defaults on each system).
+const desktopNotification = NotificationDetails(
+  linux: LinuxNotificationDetails(),
+  windows: WindowsNotificationDetails(),
+);
 
 // ── The app's icon ──
 
@@ -214,7 +223,7 @@ List<String> _dataDirs() => [
   ...(Platform.environment['XDG_DATA_DIRS'] ?? '/usr/local/share:/usr/share').split(':').where((d) => d.isNotEmpty),
 ];
 
-/// Is Encore's icon installed where the desktop looks (by the RPM, install.sh, or an earlier run)?
+/// Is Encore's icon installed where the desktop looks (by a package, install.sh, or an earlier run)?
 bool appIconInstalled([List<String>? dirs]) {
   for (final d in dirs ?? _dataDirs()) {
     for (final size in const ['64x64', '128x128', '256x256', '512x512', '48x48']) {
@@ -228,6 +237,7 @@ bool appIconInstalled([List<String>? dirs]) {
 /// The icon's name for the tray and windows. A build run straight from its folder has no installed icon:
 /// then the logo goes into your own icon folder (~/.local/share/icons), as an installer would put it.
 Future<String> ensureAppIcon() async {
+  if (Platform.isWindows) return appIconName; // Windows takes the icon from encore.exe
   if (appIconInstalled()) return appIconName;
   final assets = p.join(p.dirname(Platform.resolvedExecutable), 'data', 'flutter_assets', 'assets', 'icons');
   try {
@@ -242,18 +252,23 @@ Future<String> ensureAppIcon() async {
   }
 }
 
-// ── The tray icon (StatusNotifierItem, shown in Plasma's system tray) ──
+// ── The tray icon (StatusNotifierItem in Plasma's system tray; the notification area on Windows) ──
 
 /// tray_manager's own setIcon turns every icon into a file path inside the app, which Plasma's tray doesn't
 /// draw (it shows a generic icon). Its native side takes the icon as given, so Encore hands it the icon's
 /// name; the id stays the same between runs, so Plasma remembers where the icon goes in the tray.
-Future<void> _setTrayIcon(String icon) => const MethodChannel('tray_manager').invokeMethod('setIcon', {
+///
+/// Windows' tray takes an .ico file: tray_manager's own setIcon finds it among the app's assets.
+Future<void> _setTrayIcon(String icon) async {
+  if (Platform.isWindows) return trayManager.setIcon('assets/icons/encore.ico');
+  await const MethodChannel('tray_manager').invokeMethod('setIcon', {
   'id': appIconName,
   'iconPath': icon,
   'isTemplate': false,
   'iconPosition': 'left',
   'iconSize': 18,
-});
+  });
+}
 
 class _Tray with TrayListener {
   _Tray(this.handler);

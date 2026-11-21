@@ -100,8 +100,15 @@ Future<void> setDesktopDevice(String id) async {
   return (d.name, d.kind);
 }
 
-/// Opens one of KDE's System Settings pages ('sound' or 'bluetooth').
+/// Opens the system's sound or Bluetooth settings ('sound' or 'bluetooth'): KDE's System Settings, or the
+/// Settings app on Windows.
 Future<void> openKdeSettings(String which) async {
+  if (Platform.isWindows) {
+    try {
+      await Process.start('explorer.exe', [which == 'bluetooth' ? 'ms-settings:bluetooth' : 'ms-settings:sound']);
+    } catch (_) {}
+    return;
+  }
   final page = which == 'bluetooth' ? 'kcm_bluetooth' : 'kcm_pulseaudio';
   try {
     await Process.start('systemsettings', [page], mode: ProcessStartMode.detached);

@@ -1,0 +1,29 @@
+# Encore for Arch Linux: the ready-made Linux build from GitHub releases, repackaged (an "-bin" package).
+# tools/arch/build.sh fills in the version and checksum and makes the package; the same file works for
+# the AUR.
+pkgname=encore-bin
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc="Music from your Navidrome or Subsonic server"
+arch=('x86_64')
+url="https://github.com/d-safro/encore"
+license=('LicenseRef-Unspecified')
+# the tray links the indicator libraries directly (newer libayatana-appindicator no longer pulls them in)
+depends=('gtk3' 'mpv' 'libsecret' 'libayatana-appindicator' 'libayatana-indicator' 'ayatana-ido' 'libglvnd' 'hicolor-icon-theme')
+provides=('encore')
+conflicts=('encore')
+options=('!strip' '!debug')
+source=("https://github.com/d-safro/encore/releases/download/v${pkgver}/encore-${pkgver}-linux-x86_64.tar.gz")
+sha256sums=('@SHA256@')
+
+package() {
+  cd "encore-${pkgver}-linux-x86_64"
+  install -d "$pkgdir/usr/lib/encore" "$pkgdir/usr/bin"
+  cp -a app/. "$pkgdir/usr/lib/encore/"
+  ln -s /usr/lib/encore/encore "$pkgdir/usr/bin/encore"
+  install -Dm644 dev.safro.encore.desktop -t "$pkgdir/usr/share/applications/"
+  install -Dm644 dev.safro.encore.metainfo.xml -t "$pkgdir/usr/share/metainfo/"
+  for d in icons/*; do
+    install -Dm644 "$d"/* -t "$pkgdir/usr/share/icons/hicolor/$(basename "$d")/apps/"
+  done
+}
