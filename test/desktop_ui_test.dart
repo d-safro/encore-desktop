@@ -115,4 +115,9 @@ void main() {
       });
     }
   });
+
+  testWidgets('concerts: one heading per month', (t) async {
+    await pumpDesktop(t, '/concerts', size: const Size(1280, 1400));
+    expect(find.text('Dec'), findsOneWidget); // six December shows, one "Dec"
+  });
 }
