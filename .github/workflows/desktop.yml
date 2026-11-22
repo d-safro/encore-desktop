@@ -14,7 +14,7 @@ permissions:
 # ════ THE SWITCH ════ 'true': releases are also attached to d-safro/encore, where desktop copies up to
 # 1.9.x look for updates (see the last step). Set it to 'false' when those have all updated.
 env:
-  ATTACH_TO_PHONE_REPO: 'true'
+  ATTACH_TO_PHONE_REPO: 'false'  # 1.10.0: attached to d-safro/encore by hand (no PHONE_REPO_TOKEN secret yet); 'true' once it's added
 
 jobs:
   linux:

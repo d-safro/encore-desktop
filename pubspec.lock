@@ -251,11 +251,9 @@ packages:
   encore_core:
     dependency: "direct main"
     description:
-      path: "."
-      ref: "v1.0.0"
-      resolved-ref: aac9b08c76e945b9905875ddd0bef3253ab51d04
-      url: "https://github.com/d-safro/encore-core.git"
-    source: git
+      path: "../encore-core"
+      relative: true
+    source: path
     version: "1.0.0"
   fake_async:
     dependency: transitive
