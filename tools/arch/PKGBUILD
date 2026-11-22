@@ -6,14 +6,14 @@ pkgver=@VERSION@
 pkgrel=1
 pkgdesc="Music from your Navidrome or Subsonic server"
 arch=('x86_64')
-url="https://github.com/d-safro/encore"
+url="https://github.com/d-safro/encore-desktop"
 license=('LicenseRef-Unspecified')
 # the tray links the indicator libraries directly (newer libayatana-appindicator no longer pulls them in)
 depends=('gtk3' 'mpv' 'libsecret' 'libayatana-appindicator' 'libayatana-indicator' 'ayatana-ido' 'libglvnd' 'hicolor-icon-theme')
 provides=('encore')
 conflicts=('encore')
 options=('!strip' '!debug')
-source=("https://github.com/d-safro/encore/releases/download/v${pkgver}/encore-${pkgver}-linux-x86_64.tar.gz")
+source=("https://github.com/d-safro/encore-desktop/releases/download/v${pkgver}/encore-${pkgver}-linux-x86_64.tar.gz")
 sha256sums=('@SHA256@')
 
 package() {

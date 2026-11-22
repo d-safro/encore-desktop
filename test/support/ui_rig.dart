@@ -13,24 +13,27 @@ import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import 'package:encore/app.dart';
-import 'package:encore/core/settings.dart';
-import 'package:encore/data/account.dart';
-import 'package:encore/data/artist_extra.dart';
-import 'package:encore/data/db.dart';
-import 'package:encore/data/follows.dart';
-import 'package:encore/data/library.dart';
-import 'package:encore/data/local_files.dart';
-import 'package:encore/data/models.dart';
-import 'package:encore/data/online_art.dart';
-import 'package:encore/data/shows.dart';
-import 'package:encore/data/subsonic.dart';
-import 'package:encore/playback/handler.dart';
-import 'package:encore/ui/screens/player.dart';
+import 'package:encore_core/app.dart';
+import 'package:encore_core/core/settings.dart';
+import 'package:encore_core/data/account.dart';
+import 'package:encore_core/data/artist_extra.dart';
+import 'package:encore_core/data/db.dart';
+import 'package:encore_core/data/follows.dart';
+import 'package:encore_core/data/library.dart';
+import 'package:encore_core/data/local_files.dart';
+import 'package:encore_core/data/models.dart';
+import 'package:encore_core/data/online_art.dart';
+import 'package:encore_core/data/shows.dart';
+import 'package:encore_core/data/subsonic.dart';
+import 'package:encore_core/playback/handler.dart';
+import 'package:encore_core/ui/screens/player.dart';
 
 import 'fake_server.dart';
 
 export 'fake_server.dart' show serverMode;
+
+import 'package:encore_core/core/host.dart';
+import 'package:encore/desktop/host.dart';
 
 const _creds = Credentials('https://music.example.test', 'demo', 'demo');
 
@@ -85,6 +88,7 @@ bool _ready = false;
 
 /// Once per test file (setUpAll): a database and the plugins the screens ask for.
 Future<void> setUpRig() async {
+  encoreHost = const DesktopHost(); // the desktop window, layout and menus (encore_core alone has none)
   if (_ready) return;
   _ready = true;
   // the app's typeface, so text has its real size (the test font's is different and overflows the player bar)

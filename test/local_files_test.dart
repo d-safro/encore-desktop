@@ -1,16 +1,16 @@
 import 'dart:io';
 
-import 'package:encore/core/appearance.dart';
-import 'package:encore/core/settings.dart';
-import 'package:encore/data/device_playlists.dart';
-import 'package:encore/data/library.dart';
-import 'package:encore/data/local_android.dart';
-import 'package:encore/data/local_files.dart';
-import 'package:encore/data/models.dart';
+import 'package:encore_core/core/appearance.dart';
+import 'package:encore_core/core/settings.dart';
+import 'package:encore_core/data/device_playlists.dart';
+import 'package:encore_core/data/library.dart';
+import 'package:encore_core/data/local_android.dart';
+import 'package:encore_core/data/local_files.dart';
+import 'package:encore_core/data/models.dart';
 import 'package:encore/desktop/local_folders.dart';
-import 'package:encore/playback/autoplay.dart';
-import 'package:encore/playback/local_open.dart';
-import 'package:encore/ui/screens/local_music.dart';
+import 'package:encore_core/playback/autoplay.dart';
+import 'package:encore_core/playback/local_open.dart';
+import 'package:encore_core/ui/screens/local_music.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';

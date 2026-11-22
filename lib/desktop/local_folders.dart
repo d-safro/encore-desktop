@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
-import '../core/settings.dart';
-import '../data/library.dart';
-import '../data/local_files.dart';
+import 'package:encore_core/core/settings.dart';
+import 'package:encore_core/data/library.dart';
+import 'package:encore_core/data/local_files.dart';
 
 /// Desktop: the music in folders you choose (Settings > Music on this computer; ~/Music at first), scanned
 /// for audio files and their tags (local_files.dart), and looked at again when a folder changes and every

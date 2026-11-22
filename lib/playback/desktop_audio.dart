@@ -1,18 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_mpv/just_audio_mpv.dart' as mpv;
 
-import '../core/platform.dart';
-import '../core/settings.dart';
+import 'package:encore_core/core/platform.dart';
+import 'package:encore_core/core/settings.dart';
+import 'package:encore_core/playback/sound.dart' show OutputDevice, eqCentres, eqMinDb, eqMaxDb;
 
 /// Sound on the desktop. mpv plays the music, so the equalizer, skip silence and extra loudness are mpv
 /// filters instead of Android's audio effects, and the output device and volume are Encore's own.
-
-/// The equalizer's bands (the same five centres Android's equalizer uses, so saved gains mean the same).
-const eqCentres = [60.0, 230.0, 910.0, 3600.0, 14000.0];
-const eqMinDb = -15.0, eqMaxDb = 15.0;
 
 /// The libavfilter chain for these settings ('' when nothing is switched on).
 String desktopFilters({required bool eq, required List<double> gains, required bool skipSilence}) {
@@ -51,12 +47,6 @@ Future<void> setDesktopVolume(double v) async {
 
 final _volumeChanges = StreamController<double>.broadcast();
 Stream<double> get desktopVolumeChanges => _volumeChanges.stream;
-
-/// An output device: mpv's name for it, what to call it, and speaker / bluetooth / headphones / tv / other.
-class OutputDevice {
-  const OutputDevice(this.id, this.name, this.kind);
-  final String id, name, kind;
-}
 
 /// What a sound-server device is, from its name (PipeWire names say how it's connected).
 String deviceKindOf(String id, String description) {
@@ -124,40 +114,4 @@ Future<void> restoreDesktopSound() async {
   if (!isDesktop) return;
   await mpv.JustAudioMpv.setMasterVolume(desktopVolume);
   if (desktopDevice != 'auto') await mpv.JustAudioMpv.setDevice(desktopDevice);
-}
-
-// ── The equalizer screen's view of the bands (Android's equalizer, or the desktop's mpv filter) ──
-
-class EqBand {
-  EqBand(this.centerFrequency, double gain, this._apply) : _gain = StreamController<double>.broadcast() {
-    _now = gain;
-  }
-  final double centerFrequency;
-  final Future<void> Function(double) _apply;
-  final StreamController<double> _gain;
-  late double _now;
-
-  double get gain => _now;
-  Stream<double> get gainStream => _gain.stream;
-  Future<void> setGain(double g) async {
-    _now = g;
-    _gain.add(g);
-    await _apply(g);
-  }
-}
-
-class EqParams {
-  EqParams(this.minDecibels, this.maxDecibels, this.bands);
-  final double minDecibels, maxDecibels;
-  final List<EqBand> bands;
-
-  factory EqParams.android(AndroidEqualizerParameters p) => EqParams(p.minDecibels, p.maxDecibels, [
-        for (final b in p.bands) EqBand(b.centerFrequency, b.gain, b.setGain),
-      ]);
-
-  /// The desktop's bands hold the gains; the screen saves them to Settings, which re-applies the filter.
-  factory EqParams.desktop(List<double> gains) => EqParams(eqMinDb, eqMaxDb, [
-        for (var i = 0; i < eqCentres.length; i++)
-          EqBand(eqCentres[i], i < gains.length ? gains[i] : 0.0, (_) async {}),
-      ]);
 }

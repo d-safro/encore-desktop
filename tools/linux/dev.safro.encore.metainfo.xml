@@ -10,7 +10,7 @@
       on your phone: the same account, the queue carries over, and each can control the other.</p>
   </description>
   <launchable type="desktop-id">dev.safro.encore.desktop</launchable>
-  <url type="homepage">https://github.com/d-safro/encore</url>
+  <url type="homepage">https://github.com/d-safro/encore-desktop</url>
   <content_rating type="oars-1.1"/>
   <provides>
     <binary>encore</binary>

@@ -11,6 +11,11 @@ on:
 permissions:
   contents: write
 
+# ════ THE SWITCH ════ 'true': releases are also attached to d-safro/encore, where desktop copies up to
+# 1.9.x look for updates (see the last step). Set it to 'false' when those have all updated.
+env:
+  ATTACH_TO_PHONE_REPO: 'true'
+
 jobs:
   linux:
     runs-on: ubuntu-24.04
@@ -95,4 +100,16 @@ jobs:
       - name: Attach to the release
         env:
           GH_TOKEN: ${{ github.token }}
+        run: tools/release/upload.sh "${GITHUB_REF_NAME}" dist/*.tar.gz dist/*.rpm dist/*.deb dist/*.pkg.tar.zst dist/PKGBUILD dist/*.exe dist/*.zip
+
+      # ── For desktop copies up to 1.9.x (they look for updates in d-safro/encore) ──
+      # The same files also go on d-safro/encore's release of the same version (a draft until the phone's
+      # release is published), and its SHA256SUMS.txt keeps the lines of both apps. Needs the secret
+      # PHONE_REPO_TOKEN: a fine-grained token with Contents: read and write on d-safro/encore.
+      # To stop once no 1.9.x desktop copies are left: set ATTACH_TO_PHONE_REPO to 'false' at the top.
+      - name: Also attach to d-safro/encore (desktop copies up to 1.9.x update from there)
+        if: env.ATTACH_TO_PHONE_REPO == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PHONE_REPO_TOKEN }}
+          GH_REPO: d-safro/encore
         run: tools/release/upload.sh "${GITHUB_REF_NAME}" dist/*.tar.gz dist/*.rpm dist/*.deb dist/*.pkg.tar.zst dist/PKGBUILD dist/*.exe dist/*.zip

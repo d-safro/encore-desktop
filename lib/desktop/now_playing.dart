@@ -4,13 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../data/artist_extra.dart';
-import '../data/models.dart';
-import '../data/share_links.dart';
-import '../playback/handler.dart';
-import '../ui/actions.dart';
-import '../ui/state.dart';
-import '../ui/widgets.dart';
+import 'package:encore_core/data/artist_extra.dart';
+import 'package:encore_core/data/models.dart';
+import 'package:encore_core/data/share_links.dart';
+import 'package:encore_core/playback/handler.dart';
+import 'package:encore_core/ui/actions.dart';
+import 'package:encore_core/ui/state.dart';
+import 'package:encore_core/ui/widgets.dart';
 
 /// The desktop's "Now playing" panel (like Spotify's): where the music comes from, a big cover, the song
 /// and artist, about the artist, what's up next, and the song's details. It sits beside the page, in the

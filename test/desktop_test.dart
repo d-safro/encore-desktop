@@ -5,12 +5,12 @@ import 'package:flutter/widgets.dart' show SingleActivator;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio_mpv/just_audio_mpv.dart' as mpv;
 
-import 'package:encore/data/devices.dart';
-import 'package:encore/data/models.dart';
-import 'package:encore/ui/widgets.dart' show NameLink;
-import 'package:encore/data/pairing.dart';
-import 'package:encore/data/sync.dart';
-import 'package:encore/data/updates.dart';
+import 'package:encore_core/data/devices.dart';
+import 'package:encore_core/data/models.dart';
+import 'package:encore_core/ui/widgets.dart' show NameLink;
+import 'package:encore_core/data/pairing.dart';
+import 'package:encore_core/data/sync.dart';
+import 'package:encore_core/data/updates.dart';
 import 'package:encore/desktop/desktop.dart';
 import 'package:encore/desktop/desktop_settings.dart';
 import 'package:encore/desktop/shortcuts.dart';

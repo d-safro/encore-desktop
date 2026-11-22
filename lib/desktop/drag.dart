@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../data/account.dart';
-import '../data/library.dart';
-import '../data/models.dart';
-import '../playback/handler.dart';
-import '../ui/actions.dart';
-import '../ui/state.dart';
-import '../ui/widgets.dart' show nSongs;
+import 'package:encore_core/data/account.dart';
+import 'package:encore_core/data/library.dart';
+import 'package:encore_core/data/models.dart';
+import 'package:encore_core/playback/handler.dart';
+import 'package:encore_core/ui/actions.dart';
+import 'package:encore_core/ui/state.dart';
+import 'package:encore_core/ui/widgets.dart' show nSongs;
 
 /// Desktop drag and drop: drag songs from any list onto the queue panel, Liked songs, or a playlist in the
 /// sidebar.

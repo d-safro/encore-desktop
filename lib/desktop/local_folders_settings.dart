@@ -2,8 +2,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../core/settings.dart';
-import '../data/local_files.dart';
+import 'package:encore_core/core/settings.dart';
+import 'package:encore_core/data/local_files.dart';
 import 'local_folders.dart';
 
 /// Settings > Desktop > Music on this computer: the folders Encore looks in (~/Music at first).

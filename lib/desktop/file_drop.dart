@@ -1,8 +1,8 @@
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../data/local_files.dart' show isAudioFile;
-import '../playback/local_open.dart';
+import 'package:encore_core/data/local_files.dart' show isAudioFile;
+import 'package:encore_core/playback/local_open.dart';
 
 /// Music files dropped on the window from the file manager play (local_open.dart); a hint shows while
 /// something is dragged over the window.

@@ -49,3 +49,6 @@ app.*.map.json
 /dist/
 /android/build/
 /android/wear/build/
+
+# split.sh
+pubspec_overrides.yaml

@@ -1,4 +1,4 @@
-import '../data/local_files.dart' show localSource;
+import 'package:encore_core/data/local_files.dart' show localSource;
 import 'local_folders.dart';
 import 'dart:async';
 import 'dart:io';
@@ -16,9 +16,9 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../core/settings.dart';
-import '../data/episode_alerts.dart' show notifications;
-import '../playback/handler.dart';
+import 'package:encore_core/core/settings.dart';
+import 'package:encore_core/data/episode_alerts.dart' show notifications;
+import 'package:encore_core/playback/handler.dart';
 
 /// The desktop app's pieces that the phone doesn't have: mpv for sound, SQLite through FFI, the system's
 /// media controls (MPRIS on Linux, Windows' media flyout on Windows), the window (size remembered, close to

@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../core/appearance.dart';
-import '../ui/sheets.dart';
+import 'package:encore_core/core/appearance.dart';
+import 'package:encore_core/ui/sheets.dart';
 
 /// The desktop's menus and panels (see showAppSheet): a song's, an album's, an episode's or a station's menu
 /// opens where you clicked, as a compact menu; the phone's other bottom sheets (add to playlist, devices,

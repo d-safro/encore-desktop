@@ -9,7 +9,7 @@ Version:        %{encore_version}
 Release:        1%{?dist}
 Summary:        Music from your Navidrome or Subsonic server
 License:        LicenseRef-Unspecified
-URL:            https://github.com/d-safro/encore
+URL:            https://github.com/d-safro/encore-desktop
 Source0:        encore-%{version}-linux-%{_arch}.tar.gz
 ExclusiveArch:  x86_64 aarch64
 # the bundle carries its own Flutter libraries; the rest comes from the system

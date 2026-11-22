@@ -7,14 +7,14 @@ import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:encore/core/appearance.dart';
-import 'package:encore/app.dart' show encoreTheme;
-import 'package:encore/core/settings.dart';
+import 'package:encore_core/core/appearance.dart';
+import 'package:encore_core/app.dart' show encoreTheme;
+import 'package:encore_core/core/settings.dart';
 import 'package:encore/desktop/focus_ring.dart';
 import 'package:encore/desktop/sheets.dart' show MenuLayout;
 import 'package:encore/desktop/shell.dart' show windowBackground;
-import 'package:encore/ui/sheets.dart';
-import 'package:encore/ui/widgets.dart';
+import 'package:encore_core/ui/sheets.dart';
+import 'package:encore_core/ui/widgets.dart';
 
 import 'support/fake_server.dart' show albumArtist, artistJson, songJson;
 import 'support/ui_rig.dart';
