@@ -171,7 +171,8 @@ void main() {
     for (final (width, count) in [(1280.0, 9), (1920.0, 8)]) {
       testWidgets('$width px', (t) async {
         await pumpDesktop(t, '/home', size: Size(width, 1000));
-        final tiles = find.descendant(of: find.byType(GridView).first, matching: find.byType(InkWell));
+        // (the first grid is the shortcuts: Shuffle all, Liked songs…)
+        final tiles = find.descendant(of: find.byType(GridView).at(1), matching: find.byType(InkWell));
         expect(tiles, findsNWidgets(count));
         expect(t.getSize(tiles.first).height, 72);
       });
@@ -436,5 +437,30 @@ void main() {
     // above the choices
     final first = find.descendant(of: dialog, matching: find.text('New playlist'));
     expect(t.getTopLeft(title).dy, lessThan(t.getTopLeft(first).dy));
+  });
+
+  testWidgets('Home: the shortcuts are tiles in one row, not pills, with their full names for a screen reader', (t) async {
+    final sem = t.ensureSemantics();
+    await pumpDesktop(t, '/home');
+    const labels = ['Shuffle all', 'Liked songs', 'Made for you', 'Your stats', 'Ensemble', 'Continue here'];
+    final grid = find.byType(GridView).first;
+    Finder tileOf(String l) =>
+        find.ancestor(of: find.descendant(of: grid, matching: find.text(l)), matching: find.byType(Material)).first;
+    final tops = {for (final l in labels) t.getTopLeft(tileOf(l)).dy.round()};
+    expect(tops, hasLength(1), reason: 'all six side by side on a wide window');
+    expect(find.byType(ActionChip), findsNothing);
+    expect(find.bySemanticsLabel('Continue from another device'), findsOneWidget);
+    expect(find.bySemanticsLabel('Ensemble · Listen together'), findsOneWidget);
+    // a tile is a rounded rectangle at least 48 px tall
+    final tile = tileOf('Shuffle all');
+    expect(t.getSize(tile).height, greaterThanOrEqualTo(48));
+    final radius = t.widget<Material>(tile).borderRadius!.resolve(TextDirection.ltr).topLeft.x;
+    expect(radius, lessThan(t.getSize(tile).height / 2));
+    sem.dispose();
+  });
+
+  testWidgets('Library: the open tab is underlined, not a pill', (t) async {
+    await pumpDesktop(t, '/library');
+    expect(Theme.of(t.element(find.byType(TabBar))).tabBarTheme.indicator, isA<UnderlineTabIndicator>());
   });
 }

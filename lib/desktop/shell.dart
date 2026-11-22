@@ -1024,7 +1024,10 @@ class _TopBarState extends State<_TopBar> {
                         : null,
                     contentPadding: EdgeInsets.zero,
                     isDense: true,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppLook.of(context).r(12)),
+                      borderSide: BorderSide.none,
+                    ),
                     fillColor: cs.surfaceContainerHigh,
                     filled: true,
                   ),
