@@ -29,6 +29,7 @@ import '../ui/whats_playing.dart';
 import '../ui/widgets.dart';
 import 'desktop.dart';
 import 'drag.dart';
+import 'focus_ring.dart';
 import 'now_playing.dart';
 import 'sheets.dart';
 import 'shortcuts.dart';
@@ -216,7 +217,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     final hasSong = ref.watch(mediaItemProvider).value != null;
     return DesktopShortcuts(
       onRun: _run,
-      child: DesktopSheets(child: Scaffold(
+      // keyboard focus shown with a ring; menus and panels the desktop's way
+      child: FocusRing(child: DesktopSheets(child: Scaffold(
         backgroundColor: windowBackground(cs),
         body: Column(
           children: [
@@ -290,7 +292,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
             if (hasSong) PlayerBar(panel: _shown, onPanel: _show),
           ],
         ),
-      )),
+      ))),
     );
   }
 }

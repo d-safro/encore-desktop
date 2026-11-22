@@ -3,12 +3,14 @@
 import 'dart:math';
 
 import 'package:flutter/gestures.dart' show kSecondaryButton;
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:encore/core/appearance.dart';
 import 'package:encore/app.dart' show encoreTheme;
 import 'package:encore/core/settings.dart';
+import 'package:encore/desktop/focus_ring.dart';
 import 'package:encore/desktop/sheets.dart' show MenuLayout;
 import 'package:encore/desktop/shell.dart' show windowBackground;
 import 'package:encore/ui/sheets.dart';
@@ -334,5 +336,27 @@ void main() {
     await t.tap(find.text('Deep Focus').last, buttons: kSecondaryButton);
     await settle(t);
     expect(find.text('Shuffle'), findsOneWidget); // the playlist's menu
+  });
+
+  testWidgets('a ring round the keyboard focus, from the first Tab to the next click', (t) async {
+    await t.pumpWidget(MaterialApp(
+      home: FocusRing(
+        child: Column(
+          children: [
+            for (var i = 0; i < 3; i++) Focus(child: Builder(builder: (_) => const SizedBox(width: 80, height: 40))),
+          ],
+        ),
+      ),
+    ));
+    RenderObject ring() =>
+        t.renderObject(find.descendant(of: find.byType(FocusRing), matching: find.byType(CustomPaint)).first);
+    final accent = Theme.of(t.element(find.byType(FocusRing))).colorScheme.primary;
+    expect(ring(), paintsNothing);
+    await t.sendKeyEvent(LogicalKeyboardKey.tab);
+    await t.pump();
+    expect(ring(), paints..rrect(color: accent, style: PaintingStyle.stroke, strokeWidth: 2));
+    await t.tapAt(const Offset(700, 500)); // a click: back to no ring
+    await t.pump();
+    expect(ring(), paintsNothing);
   });
 }
