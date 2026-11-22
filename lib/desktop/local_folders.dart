@@ -40,7 +40,7 @@ class DesktopFolderSource extends LocalSource {
       await for (final e in dir.list(recursive: true, followLinks: false).handleError((_) {})) {
         if (e is! File || !isAudioFile(e.path)) continue;
         final path = p.normalize(e.path);
-        if (p.isWithin(own, path) || path.split(p.separator).any((x) => x.startsWith('.')) || !seen.add(path)) continue;
+        if (p.isWithin(own, path) || hiddenBelow(d, path) || !seen.add(path)) continue;
         final had = known[path];
         final mtime = (await e.stat()).modified.millisecondsSinceEpoch;
         out.add(had != null && had.mtime == mtime ? had : await readTags(e, coversDir: covers));
@@ -63,6 +63,12 @@ class DesktopFolderSource extends LocalSource {
     }
   }
 }
+
+/// Whether [path] is a hidden file, or in a hidden folder, under the chosen folder [root] (the folder itself
+/// may be anywhere, ~/.local included). Names like "...And Justice for All" or ".38 Special" aren't hidden.
+bool hiddenBelow(String root, String path) => p
+    .split(p.relative(path, from: root))
+    .any((x) => x.length > 1 && x.startsWith('.') && !x.startsWith('..') && !RegExp(r'^\.\d').hasMatch(x));
 
 /// The folders, from the setting ('~' is your home); ~/Music when none are set.
 List<String> localFolders(List<String>? saved, {String? home}) {

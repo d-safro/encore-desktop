@@ -3,7 +3,7 @@ Version: @VERSION@
 Architecture: @ARCH@
 Maintainer: Encore <noreply@github.com>
 Installed-Size: @SIZE@
-Depends: libgtk-3-0t64 | libgtk-3-0, libmpv2 | libmpv1, libsecret-1-0, libayatana-appindicator3-1, libstdc++6, libglib2.0-0t64 | libglib2.0-0, libegl1, libgles2
+Depends: libc6 (>= @LIBC@), libgtk-3-0t64 | libgtk-3-0, libmpv2 | libmpv1, libsecret-1-0, libayatana-appindicator3-1, libstdc++6, libglib2.0-0t64 | libglib2.0-0, libegl1, libgles2
 Section: sound
 Priority: optional
 Homepage: https://github.com/d-safro/encore-desktop

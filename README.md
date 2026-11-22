@@ -46,7 +46,7 @@ and Windows 10 or 11). Every release on the [Releases](../../releases/latest) pa
 |---|---|
 | `encore-<version>-linux-x86_64.tar.gz` | any Linux on a 64-bit PC: install it for yourself, no password needed, and Encore updates itself |
 | `encore-<version>-1.x86_64.rpm` | Fedora: install it for every user with dnf |
-| `encore_<version>_amd64.deb` | Debian 12+, Ubuntu 22.04+, Linux Mint and the like: install it with apt |
+| `encore_<version>_amd64.deb` | Debian 13+, Ubuntu 24.04+, Linux Mint 22+ and the like: install it with apt |
 | `encore-bin-<version>-1-x86_64.pkg.tar.zst` and `PKGBUILD` | Arch Linux, Manjaro, EndeavourOS: install it with pacman |
 | `encore-<version>-windows-x64-setup.exe` | Windows 10 / 11: installs for you (no administrator), and Encore updates itself |
 | `encore-<version>-windows-x64.zip` | Windows, portable: unpack anywhere and run `encore.exe` (update it by hand) |

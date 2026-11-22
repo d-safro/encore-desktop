@@ -5,13 +5,15 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_service_mpris/audio_service_mpris.dart';
+import 'package:dbus/dbus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter/material.dart' show Rect, Size, debugPrint;
+import 'package:flutter/material.dart' show Offset, Rect, Size, debugPrint;
 import 'package:flutter/services.dart' show MethodChannel;
 import 'package:just_audio_mpv/just_audio_mpv.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:screen_retriever/screen_retriever.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
@@ -71,7 +73,8 @@ class _WindowEvents with WindowListener {
 
   @override
   void onWindowClose() async {
-    if (closeToTray) {
+    // no tray icon to come back from: closing quits, as if the setting were off (the setting is kept)
+    if (closeToTray && await trayShown()) {
       await windowManager.hide();
       // the first time: say where it went, so music going on isn't a mystery
       if (prefs.getBool('trayHintShown') != true) {
@@ -124,9 +127,35 @@ Rect? savedBounds(String? s) {
 
 const minWindowSize = Size(760, 520);
 
+/// Whether enough of the window (a strip along its top, where you grab it) is on one of these screens.
+/// A window saved on a screen that's since been unplugged isn't.
+bool onSomeScreen(Rect window, List<Rect> screens) {
+  final grip = Rect.fromLTWH(window.left, window.top, window.width, 40);
+  return screens.any((d) {
+    final i = d.intersect(grip);
+    return i.width >= 100 && i.height >= 20;
+  });
+}
+
+Future<List<Rect>> _screens() async {
+  try {
+    return [
+      for (final d in await screenRetriever.getAllDisplays())
+        (d.visiblePosition ?? Offset.zero) & (d.visibleSize ?? d.size),
+    ];
+  } catch (_) {
+    return const [];
+  }
+}
+
 Future<void> initWindow() async {
   await windowManager.ensureInitialized();
-  final bounds = savedBounds(prefs.getString('windowBounds'));
+  var bounds = savedBounds(prefs.getString('windowBounds'));
+  // the saved place is used only if it's still on a screen (no screens found: it's kept)
+  if (bounds != null && !Platform.environment.containsKey('WAYLAND_DISPLAY')) {
+    final screens = await _screens();
+    if (screens.isNotEmpty && !onSomeScreen(bounds, screens)) bounds = null;
+  }
   await windowManager.waitUntilReadyToShow(
     WindowOptions(
       title: 'Encore',
@@ -140,10 +169,12 @@ Future<void> initWindow() async {
         await windowManager.setPosition(bounds.topLeft);
       }
       if (prefs.getBool('windowMaximized') == true) await windowManager.maximize();
-      // started hidden (autostart with --hidden): only the tray icon
+      // started hidden (autostart with --hidden): only the tray icon, if there is one
       if (!_startHidden) {
         await windowManager.show();
         await windowManager.focus();
+      } else {
+        unawaited(_showIfNoTray());
       }
     },
   );
@@ -152,6 +183,16 @@ Future<void> initWindow() async {
 }
 
 bool _startHidden = false;
+
+/// Started hidden: the window comes up after all if no tray shows up (the desktop's tray can take a moment
+/// at login), else Encore would run with no way to reach it.
+Future<void> _showIfNoTray() async {
+  for (var i = 0; i < 15; i++) {
+    await Future.delayed(const Duration(seconds: 1));
+    if (_trayStarted && await trayShown()) return;
+  }
+  await showWindow();
+}
 
 /// Command-line options: --hidden starts in the tray.
 void readArgs(List<String> args) => _startHidden = args.contains('--hidden');
@@ -347,11 +388,32 @@ class _Tray with TrayListener {
   }
 }
 
+bool _trayStarted = false, _trayFailed = false;
+
+/// Whether the tray icon can be seen: it started, and (Linux) something draws it. GNOME without the
+/// AppIndicator extension has no tray; the icon is then made but never shown.
+Future<bool> trayShown() async {
+  if (_trayFailed) return false;
+  if (!Platform.isLinux) return true;
+  final bus = DBusClient.session();
+  try {
+    return await bus.nameHasOwner('org.kde.StatusNotifierWatcher').timeout(const Duration(seconds: 2));
+  } catch (_) {
+    return true; // can't tell: as before
+  } finally {
+    unawaited(bus.close());
+  }
+}
+
 Future<void> startTray(AudioHandler handler) async {
   try {
     await _Tray(handler).start();
+    _trayStarted = true;
   } catch (e) {
-    // no tray (another desktop without StatusNotifierItem): closing the window then quits
-    await setCloseToTray(false);
+    // no tray: closing the window then quits (your setting is kept, for when there is one), and a copy
+    // started hidden shows its window
+    debugPrint('Encore: no tray icon: $e');
+    _trayFailed = true;
+    if (_startHidden) await showWindow();
   }
 }

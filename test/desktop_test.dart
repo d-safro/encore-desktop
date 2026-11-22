@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart' show SingleActivator;
+import 'package:flutter/widgets.dart' show Rect, SingleActivator;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio_mpv/just_audio_mpv.dart' as mpv;
 
@@ -13,11 +13,21 @@ import 'package:encore_core/data/sync.dart';
 import 'package:encore_core/data/updates.dart';
 import 'package:encore/desktop/desktop.dart';
 import 'package:encore/desktop/desktop_settings.dart';
+import 'package:encore/desktop/updater.dart' show restartScript;
 import 'package:encore/desktop/shortcuts.dart';
 import 'package:encore/playback/desktop_audio.dart';
 
 void main() {
   group('updates on GitHub releases', () {
+    test('after a self-update the new copy starts only once the old one has ended', () async {
+      if (!Platform.isLinux) return;
+      final old = await Process.start('sleep', ['1']);
+      final watch = Stopwatch()..start();
+      final r = await Process.run('sh', ['-c', restartScript, 'true', '${old.pid}']);
+      expect(r.exitCode, 0);
+      expect(watch.elapsedMilliseconds, greaterThan(700));
+    });
+
     const assets = [
       'encore-1.8.0-arm64-v8a.apk',
       'encore-1.8.0-armeabi-v7a.apk',
@@ -83,8 +93,31 @@ void main() {
       );
       expect(systemUpdateCommand(u, 'rpm'), 'sudo dnf install https://x/encore-1.8.0-1.fc44.x86_64.rpm');
       expect(systemUpdateCommand(u, 'deb'),
-          'cd /tmp && curl -LO https://x/encore_1.8.0_amd64.deb && sudo apt install ./encore_1.8.0_amd64.deb');
-      expect(systemUpdateCommand(u, 'arch'), 'sudo pacman -U https://x/encore-bin-1.8.0-1-x86_64.pkg.tar.zst');
+          'cd "\$(mktemp -d)" && curl -LO https://x/encore_1.8.0_amd64.deb && sudo apt install ./encore_1.8.0_amd64.deb');
+      // pacman won't install an unsigned package from a URL: it's downloaded first
+      expect(systemUpdateCommand(u, 'arch'),
+          'cd "\$(mktemp -d)" && curl -LO https://x/encore-bin-1.8.0-1-x86_64.pkg.tar.zst && sudo pacman -U ./encore-bin-1.8.0-1-x86_64.pkg.tar.zst');
+    });
+
+    test("the checksum is the one for this file, not one whose name ends the same", () {
+      final a = 'a' * 64, b = 'B' * 64;
+      final sums = '$b  old-encore-1.8.0-linux-x86_64.tar.gz\n$a *encore-1.8.0-linux-x86_64.tar.gz\n';
+      expect(checksumFor(sums, 'encore-1.8.0-linux-x86_64.tar.gz'), a);
+      expect(checksumFor(sums, 'encore-1.8.0-windows-x64-setup.exe'), isNull);
+      expect(checksumFor('not a checksum  encore.tar.gz', 'encore.tar.gz'), isNull);
+    });
+
+    test('a release with no checksums is never downloaded to be installed', () async {
+      const u = UpdateInfo(
+        version: '1.8.0',
+        notes: '',
+        apkUrl: 'https://x/encore-1.8.0-linux-x86_64.tar.gz',
+        apkName: 'encore-1.8.0-linux-x86_64.tar.gz',
+        size: 0,
+        sumsUrl: '',
+        pageUrl: '',
+      );
+      await expectLater(downloadUpdate(u, (_) {}), throwsFormatException);
     });
 
     test('how a Linux package was installed', () async {
@@ -201,6 +234,16 @@ void main() {
       expect(savedBounds('10,20,300,200'), isNull);
       expect(savedBounds('rubbish'), isNull);
       expect(savedBounds(null), isNull);
+    });
+
+    test('a window saved on a screen since unplugged is not put back there', () {
+      const laptop = Rect.fromLTWH(0, 0, 1920, 1080);
+      const tv = Rect.fromLTWH(1920, 0, 3840, 2160);
+      expect(onSomeScreen(const Rect.fromLTWH(100, 100, 1280, 820), [laptop]), isTrue);
+      expect(onSomeScreen(const Rect.fromLTWH(2500, 300, 1280, 820), [laptop, tv]), isTrue);
+      expect(onSomeScreen(const Rect.fromLTWH(2500, 300, 1280, 820), [laptop]), isFalse);
+      // only its bottom edge showing: the title bar can't be grabbed
+      expect(onSomeScreen(const Rect.fromLTWH(100, -800, 1280, 820), [laptop]), isFalse);
     });
 
     test('no two shortcuts share a key', () {
