@@ -78,6 +78,8 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
       auto* data = reinterpret_cast<const COPYDATASTRUCT*>(lparam);
       if (data != nullptr && data->dwData == 0x454E4346 && files_channel_ && data->cbData > 0) {
         std::wstring all(reinterpret_cast<const wchar_t*>(data->lpData), data->cbData / sizeof(wchar_t));
+        // the sender counts the closing NUL: not a path
+        while (!all.empty() && all.back() == L'\0') all.pop_back();
         flutter::EncodableList paths;
         std::wstringstream lines(all);
         std::wstring line;

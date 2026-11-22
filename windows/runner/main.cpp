@@ -34,7 +34,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
       wchar_t** argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
       std::wstring files;
       for (int i = 1; argv != nullptr && i < argc; i++) {
-        if (wcsncmp(argv[i], L"--", 2) != 0) files += std::wstring(argv[i]) + L"\n";
+        if (wcsncmp(argv[i], L"--", 2) == 0) continue;
+        // the running Encore has its own current folder: a relative path is made whole here
+        wchar_t full[MAX_PATH * 4];
+        DWORD n = ::GetFullPathNameW(argv[i], MAX_PATH * 4, full, nullptr);
+        files += (n > 0 && n < MAX_PATH * 4 ? std::wstring(full, n) : std::wstring(argv[i])) + L"\n";
       }
       if (argv != nullptr) ::LocalFree(argv);
       if (!files.empty()) {
