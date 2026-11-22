@@ -172,4 +172,20 @@ void main() {
       });
     }
   });
+
+  group('On this computer', () {
+    testWidgets('the play and shuffle buttons of every song list, a compact filter', (t) async {
+      await pumpDesktop(t, '/local');
+      expect(find.byType(PlayButtons), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Shuffle'), findsNothing); // the phone's pill
+      expect(t.getSize(find.byType(TextField).last).height, 40);
+    });
+
+    testWidgets('a song without an artist keeps its title in the middle of the row', (t) async {
+      await pumpDesktop(t, '/local');
+      final title = find.text('Local 1'); // the rig's odd songs have no artist
+      final row = find.ancestor(of: title, matching: find.byType(SongTile));
+      expect((t.getCenter(title).dy - t.getCenter(row).dy).abs(), lessThan(2));
+    });
+  });
 }
