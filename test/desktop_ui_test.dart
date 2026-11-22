@@ -258,4 +258,23 @@ void main() {
       });
     }
   });
+
+  group('one back button: the window\'s', () {
+    for (final page in ['/album/al2', '/settings', '/liked', '/local', '/following']) {
+      testWidgets(page, (t) async {
+        await pumpDesktop(t, page);
+        expect(find.byType(BackButton), findsNothing);
+        expect(find.byTooltip('Back (Alt+←)'), findsOneWidget);
+      });
+    }
+
+    testWidgets('titles start where Home\'s does, and the window\'s ‹ still goes back', (t) async {
+      await pumpDesktop(t, '/settings');
+      expect(t.getTopLeft(find.descendant(of: find.byType(AppBar), matching: find.text('Settings'))).dx, lessThan(300));
+      await t.tap(find.byTooltip('Back (Alt+←)'));
+      await settle(t);
+      expect(find.byType(AppBar), findsNothing); // Home has none
+      expect(find.textContaining('Good '), findsOneWidget);
+    });
+  });
 }
