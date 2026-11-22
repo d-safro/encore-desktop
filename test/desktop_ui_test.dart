@@ -277,4 +277,33 @@ void main() {
       expect(find.textContaining('Good '), findsOneWidget);
     });
   });
+
+  group('one search box', () {
+    testWidgets('the Search page has none of its own; the window\'s box searches as you type', (t) async {
+      final router = await pumpDesktop(t, '/home');
+      expect(find.byType(TextField), findsOneWidget); // the window's
+      router.go('/search');
+      await settle(t);
+      expect(find.byType(SearchBar), findsNothing);
+      expect(find.byType(TextField), findsOneWidget);
+      await t.enterText(find.byType(TextField), 'harbour');
+      await t.pump(const Duration(seconds: 1)); // the page waits for typing to pause
+      await settle(t);
+      expect(find.text('Artists'), findsOneWidget); // results came
+      await t.tap(find.byTooltip('Clear'));
+      await t.pump(const Duration(seconds: 1));
+      await settle(t);
+      expect(find.text('Artists'), findsNothing);
+    });
+
+    testWidgets('a search from another page lands in the same box', (t) async {
+      final router = await pumpDesktop(t, '/home');
+      await t.enterText(find.byType(TextField), 'harbour');
+      await t.testTextInput.receiveAction(TextInputAction.search);
+      await settle(t);
+      expect(router.state.uri.toString(), '/search?q=harbour');
+      expect(t.widget<TextField>(find.byType(TextField)).controller!.text, 'harbour');
+      expect(find.text('Songs'), findsWidgets);
+    });
+  });
 }
