@@ -85,4 +85,16 @@ void main() {
     expect(settings.left, home.left);
     expect(settings.width, home.width);
   });
+
+  group('tabs: compact pills on the left, under the title', () {
+    for (final (page, first) in [('/following', 'Artists'), ('/library?tab=2', 'Playlists')]) {
+      testWidgets(page, (t) async {
+        await pumpDesktop(t, page);
+        expect(t.widget<TabBar>(find.byType(TabBar)).isScrollable, isTrue);
+        final tab = t.getRect(find.ancestor(of: find.text(first).last, matching: find.byType(Tab)));
+        expect(tab.left, lessThan(300)); // the page starts at 264
+        expect(tab.width, lessThan(160)); // not stretched across the page
+      });
+    }
+  });
 }
