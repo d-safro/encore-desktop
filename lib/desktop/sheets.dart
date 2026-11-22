@@ -3,8 +3,9 @@ import 'package:material_ui/material_ui.dart';
 import '../core/appearance.dart';
 import '../ui/sheets.dart';
 
-/// The desktop's menus and panels (see showAppSheet): a song's, an album's or an episode's menu opens where you
-/// clicked, as a compact menu; the phone's other bottom sheets open as a dialog in the middle of the window.
+/// The desktop's menus and panels (see showAppSheet): a song's, an album's, an episode's or a station's menu
+/// opens where you clicked, as a compact menu; the phone's other bottom sheets (add to playlist, devices,
+/// sound, Jam…) open as a dialog in the middle of the window.
 
 /// Where and when the mouse last went down (the right click, or the ⋯ button, that opened a menu).
 Offset? _pointer;
@@ -44,11 +45,17 @@ Offset? _menuAnchor() {
   return null; // the middle of the window
 }
 
-Future<Object?> openDesktopSheet(BuildContext context, WidgetBuilder builder, {required bool menu}) {
+Future<Object?> openDesktopSheet(
+  BuildContext context,
+  WidgetBuilder builder, {
+  required bool menu,
+  bool dismissible = true,
+}) {
   if (!menu) {
     return showDialog<Object>(
       context: context,
       useRootNavigator: true,
+      barrierDismissible: dismissible,
       builder: (ctx) => Dialog(
         clipBehavior: Clip.antiAlias,
         child: ConstrainedBox(

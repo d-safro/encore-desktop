@@ -238,4 +238,24 @@ void main() {
       expect(find.text('a menu'), findsOneWidget);
     });
   });
+
+  group('the phone\'s other bottom sheets are dialogs', () {
+    for (final (page, button, inside) in [
+      ('/album/al2', 'Add to playlist', 'New playlist'),
+      ('/home', 'Your devices (Ctrl+D)', 'Your devices'),
+      ('/home', 'Sound', 'Volume'),
+    ]) {
+      testWidgets(button, (t) async {
+        await pumpDesktop(t, page);
+        await t.tap(find.byTooltip(button).first);
+        await settle(t);
+        expect(find.byType(BottomSheet), findsNothing);
+        final dialog = find.byType(Dialog);
+        expect(dialog, findsOneWidget);
+        expect(find.descendant(of: dialog, matching: find.text(inside)), findsWidgets);
+        final panel = find.descendant(of: dialog, matching: find.byType(Material)).first;
+        expect(t.getSize(panel).width, lessThanOrEqualTo(520)); // a dialog, not a sheet across the window
+      });
+    }
+  });
 }
