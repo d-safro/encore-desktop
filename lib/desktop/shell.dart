@@ -463,9 +463,15 @@ class _Sidebar extends ConsumerWidget {
             ),
           ),
         ),
+        // a line between the scrolling list and what stays at the bottom; the same right inset as the rows
+        // above (they leave a lane for the scrollbar)
+        const Divider(height: 9, indent: 16, endIndent: 26),
         if (online.isNotEmpty)
-          Padding(padding: const EdgeInsets.fromLTRB(8, 0, 8, 4), child: _DeviceHint(online.first)),
-        item(const SideItem('Settings', Icons.settings_rounded, '/settings')),
+          Padding(padding: const EdgeInsets.fromLTRB(8, 0, 18, 4), child: _DeviceHint(online.first)),
+        Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: item(const SideItem('Settings', Icons.settings_rounded, '/settings')),
+        ),
         const SizedBox(height: 8),
       ],
     );

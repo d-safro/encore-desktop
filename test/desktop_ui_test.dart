@@ -73,4 +73,16 @@ void main() {
       expect(arrow(t, 'Scroll Albums on').onPressed, isNull); // at the end
     });
   });
+
+  testWidgets('the sidebar\'s Settings row is as wide as the rows above it', (t) async {
+    await pumpDesktop(t, '/settings');
+    Rect row(String label) {
+      final text = find.text(label).evaluate().firstWhere((e) => t.getTopLeft(find.byWidget(e.widget)).dx < 260);
+      return t.getRect(find.ancestor(of: find.byWidget(text.widget), matching: find.byType(Material)).first);
+    }
+
+    final home = row('Home'), settings = row('Settings');
+    expect(settings.left, home.left);
+    expect(settings.width, home.width);
+  });
 }
