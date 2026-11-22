@@ -91,14 +91,18 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   // Back and forward like a browser: Back pops (or goes to the page before), Forward undoes a Back.
   final _visited = <String>[];
   final _forward = <String>[];
-  bool _byHistory = false;
+  bool _byHistory = false, _goingBack = false;
 
   @override
   void didUpdateWidget(DesktopShell old) {
     super.didUpdateWidget(old);
     if (old.location == widget.location) return;
     if (!_byHistory) _forward.clear(); // somewhere new: Forward has nothing to redo
-    _byHistory = false;
+    final back = _goingBack;
+    _byHistory = _goingBack = false;
+    // Back took its page off the list: the page it left goes to Forward, not back on the list (else the next
+    // Back would return to it, and Back would go to and fro between two pages)
+    if (back) return;
     _visited.add(old.location);
     if (_visited.length > 100) _visited.removeAt(0);
   }
@@ -107,7 +111,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
 
   void back() {
     if (!canBack) return;
-    _byHistory = true;
+    _byHistory = _goingBack = true;
     _forward.add(widget.location);
     if (context.canPop()) {
       context.pop();
