@@ -136,6 +136,12 @@ void main() {
   test('desktop folders: audio files, not Encore\'s downloads, not hidden folders; ~ is home', () async {
     expect(localFolders(null, home: '/home/me'), ['/home/me/Music']);
     expect(localFolders(['~/Tunes', '/srv/music'], home: '/home/me'), ['/home/me/Tunes', '/srv/music']);
+    // hidden means under the chosen folder, and not an album that starts with dots or a number
+    expect(hiddenBelow('/home/me/.local/Music', '/home/me/.local/Music/A/one.flac'), isFalse);
+    expect(hiddenBelow('/m', '/m/Metallica/...And Justice for All/01.flac'), isFalse);
+    expect(hiddenBelow('/m', '/m/.38 Special/Wild-Eyed Southern Boys/01.flac'), isFalse);
+    expect(hiddenBelow('/m', '/m/.hidden/two.flac'), isTrue);
+    expect(hiddenBelow('/m', '/m/A/._one.flac'), isTrue);
     if (!hasFfmpeg) return;
     final music = Directory(p.join(tmp.path, 'Music'));
     await tagged(music, 'A/one.flac', {'title': 'One'});
