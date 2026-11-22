@@ -189,6 +189,8 @@ the setup program.
   offline, nothing sent anywhere). Finds are kept under "Identified before".
 - Synced lyrics (tap a line to jump), plain lyrics; online from LRCLIB, NetEase and lyrics.ovh (order and
   sources in Settings), and "Wrong lyrics?" to pick another match.
+- Lyric cards: hold a line in the lyrics for a picture of it (up to four lines) with the cover and its colours,
+  to share, or to save on the desktop.
 - Translate lyrics (a chip over the words): a muted second line under each line, in your phone's language or
   the one in Settings; Romanize for Japanese, Korean, Chinese, Cyrillic and other alphabets. Done by your server's
   own AI (music-lookup + Ollama, only while AI is on), cached per song: nothing leaves home.
