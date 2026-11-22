@@ -359,4 +359,26 @@ void main() {
     await t.pump();
     expect(ring(), paintsNothing);
   });
+
+  testWidgets('Settings: its sections listed beside it, a click goes to one', (t) async {
+    await pumpDesktop(t, '/settings');
+    await t.pump();
+    // the index (left of the page column), in the page's order
+    final small = Theme.of(t.element(find.byType(Scaffold).last)).textTheme.labelLarge?.fontSize;
+    Finder entry(String name) =>
+        find.byWidgetPredicate((w) => w is Text && w.data == name && w.style?.fontSize == small);
+    for (final name in ['Server', 'Your devices', 'Desktop', 'Playback', 'About']) {
+      expect(entry(name), findsOneWidget, reason: name);
+    }
+    expect(t.getTopLeft(entry('Server')).dy, lessThan(t.getTopLeft(entry('About')).dy));
+    final about = find.descendant(
+      of: find.byType(SectionTitle, skipOffstage: false),
+      matching: find.text('About', skipOffstage: false),
+      skipOffstage: false,
+    );
+    expect(t.getTopLeft(about).dy, greaterThan(800)); // far down the page
+    await t.tap(entry('About'));
+    await t.pumpAndSettle();
+    expect(t.getTopLeft(about).dy, lessThan(800)); // scrolled to it
+  });
 }
