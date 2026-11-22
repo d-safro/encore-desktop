@@ -18,6 +18,8 @@ env:
 
 jobs:
   linux:
+    # Built here, the programs can need a C library as new as this machine's (glibc 2.39): the .deb asks for
+    # the newest one they use (tools/debian/build-deb.sh), so it's for Debian 13+ and Ubuntu 24.04+.
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
