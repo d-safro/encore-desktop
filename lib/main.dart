@@ -16,6 +16,7 @@ import 'core/settings.dart';
 import 'data/account.dart';
 import 'data/cover_cache.dart';
 import 'data/saved_covers.dart';
+import 'data/saved_lyrics.dart';
 import 'data/db.dart';
 import 'data/devices.dart';
 import 'data/jam.dart';
@@ -45,6 +46,8 @@ Future<void> main(List<String> args) async {
   libraryDb = await LibraryDb.open(file: await currentDbFile()); // each server has its own copy
   // the covers kept with the downloads: before the player, which shows them on the lock screen
   savedCovers = await SavedCovers.open(Directory(p.join((await getApplicationSupportDirectory()).path, 'covers')));
+  // and their lyrics, so they show with no server too
+  savedLyrics = await SavedLyrics.open(Directory(p.join((await getApplicationSupportDirectory()).path, 'lyrics')));
 
   final container = ProviderContainer();
   await container.read(accountProvider.future); // the player needs the server before restoring the queue
