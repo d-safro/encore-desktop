@@ -256,6 +256,8 @@ the setup program.
 
 **Your stuff**
 - Hearts, 1–5 star ratings, playlists (create, add, rename, reorder, remove, delete), scrobbling.
+- Don't suggest this song / Don't suggest <artist> (a song's menu): left out of autoplay, smart shuffle, radio,
+  instant mixes and the weekly mixes, still played when you pick them; undo in Settings › Not suggested. Synced.
 - Invite to edit (a playlist's menu): a link like Jam's lets friends add songs from your library to that playlist
   on a web page, and take out the ones they added; it works until you stop it (or 30 days).
 - Private session (Settings, or the devices sheet in the player): for up to 6 hours nothing you play is
