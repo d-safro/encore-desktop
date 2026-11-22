@@ -151,4 +151,14 @@ void main() {
     final cs = Theme.of(t.element(heading)).colorScheme;
     expect(t.widget<Text>(heading).style?.color, cs.onSurface);
   });
+
+  group('a release you don\'t have: the round badge, not a ⬇ character', () {
+    for (final page in ['/home', '/following?tab=1']) {
+      testWidgets(page, (t) async {
+        await pumpDesktop(t, page, size: const Size(1280, 2000));
+        expect(find.text('⬇'), findsNothing);
+        expect(find.byType(LookupBadge), findsNWidgets(3)); // the rig's three releases
+      });
+    }
+  });
 }
