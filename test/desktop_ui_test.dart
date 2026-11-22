@@ -161,4 +161,15 @@ void main() {
       });
     }
   });
+
+  group('Home\'s quick picks: a fixed height, more across on a wide window', () {
+    for (final (width, count) in [(1280.0, 9), (1920.0, 8)]) {
+      testWidgets('$width px', (t) async {
+        await pumpDesktop(t, '/home', size: Size(width, 1000));
+        final tiles = find.descendant(of: find.byType(GridView).first, matching: find.byType(InkWell));
+        expect(tiles, findsNWidgets(count));
+        expect(t.getSize(tiles.first).height, 72);
+      });
+    }
+  });
 }
