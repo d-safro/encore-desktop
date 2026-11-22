@@ -1,11 +1,41 @@
 <p align="center"><img src="docs/logo.svg" width="128" alt="Encore logo: a record whose label is a lowercase e"></p>
 
-# Encore for the desktop
+<h1 align="center">Encore for the desktop</h1>
 
-Encore for Linux (made for Fedora with KDE Plasma) and Windows: a music player for your **Navidrome** (or any
-Subsonic / OpenSubsonic) library. Dark, minimalist, Material You. The Android app is
-[d-safro/encore](https://github.com/d-safro/encore), where the features and the optional server extras are
-described; the code both share is [d-safro/encore-core](https://github.com/d-safro/encore-core).
+<p align="center">
+  A music player for your own music server, for Linux and Windows.<br>
+  Made for <a href="https://github.com/d-safro/conductor">Conductor</a>, and at home with Navidrome or any Subsonic server.
+</p>
+
+<p align="center">
+  <a href="../../releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/d-safro/encore-desktop?label=release"></a>
+  <img alt="Linux" src="https://img.shields.io/badge/Linux-tar.gz%20%7C%20RPM%20%7C%20deb%20%7C%20Arch-555">
+  <img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4">
+  <a href="https://github.com/d-safro/encore"><img alt="Phone app" src="https://img.shields.io/badge/phone-Android%20%7C%20Wear%20OS-3ddc84"></a>
+</p>
+
+<p align="center"><img src="docs/screenshots/home_1920_dark.jpg" alt="Encore's Home on the desktop, dark theme" width="820"></p>
+
+## What it does
+
+- **A real desktop app:** a sidebar with your library, right-click menus, keyboard shortcuts and focus, media keys, the system tray, and a Now Playing panel with lyrics and the queue.
+- **Plays your library** from Conductor, Navidrome or any Subsonic / OpenSubsonic server, plus the music in folders on your computer (`~/Music` by default) and files you drop on the window.
+- **Everything the phone app has:**
+  - downloads for offline, with lyrics;
+  - mixes, radio, Automix;
+  - synced lyrics with translation;
+  - stats and your year in review;
+  - listening together;
+  - casting to speakers and TVs.
+- **Works with your phone:** sign in with your phone, continue where you left off, and use either as a remote for the other.
+- **Updates itself** (the tar.gz and the Windows setup), dark by default with a light theme.
+
+The full feature list is in the phone app's [docs/FEATURES.md](https://github.com/d-safro/encore/blob/main/docs/FEATURES.md); the code both apps share is [encore-core](https://github.com/d-safro/encore-core).
+
+| | |
+|---|---|
+| <img src="docs/screenshots/album_1920_light.jpg" alt="An album page, light theme"> | <img src="docs/screenshots/panel_nowplaying_1920_dark.jpg" alt="The Now Playing panel, dark theme"> |
+| <img src="docs/screenshots/lib_playlists_1920_light.jpg" alt="Playlists as a grid of covers, light theme"> | <sub>Screenshots use made-up sample music.</sub> |
 
 ## Install
 
@@ -90,7 +120,7 @@ the setup program.
   you log in" done the Windows way. The output-device picker lists Windows' devices.
 - Not on the desktop: the home-screen widget (Plasma's media applet does that), Android Auto, the app icon
   choice, and USB-cable mode. If the computer runs your server, give it the server's own address in Settings ›
-  Server › Address on your home network (e.g. `http://127.0.0.1:4540` with the server extras).
+  Server › Address on your home network (e.g. `http://127.0.0.1:4540` with Conductor).
 
 **With your phone**
 - The same server accounts: sign in with your password, or **sign in with your phone**: type the server address
@@ -102,7 +132,7 @@ the setup program.
   remote: play / pause, skip, seek and volume.
 - Pins, Home sections, smart-shuffle songs you dropped, lyrics you picked and podcast episodes marked played stay
   the same on both. Plays, stats, hearts, ratings, playlists and smart playlists are on the server anyway.
-- Devices, sync and phone sign-in need the server extras (music-lookup); without them each device keeps its own
+- Devices, sync and phone sign-in need Conductor; without it each device keeps its own
   pins and "Continue from another device" still works.
 
 ### Updating from 1.9 and older
