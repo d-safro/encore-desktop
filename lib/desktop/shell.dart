@@ -16,17 +16,22 @@ import '../data/devices.dart';
 import '../data/library.dart';
 import '../data/library_pins.dart';
 import '../data/models.dart';
+import '../data/song_id.dart' show canIdentify;
 import '../playback/desktop_audio.dart';
 import '../playback/handler.dart';
 import '../playback/private_session.dart';
 import '../ui/actions.dart';
 import '../ui/devices_sheet.dart';
 import '../ui/screens/player.dart';
+import '../ui/screens/search.dart' show searchBoxText;
 import '../ui/state.dart';
+import '../ui/whats_playing.dart';
 import '../ui/widgets.dart';
 import 'desktop.dart';
 import 'drag.dart';
+import 'focus_ring.dart';
 import 'now_playing.dart';
+import 'sheets.dart';
 import 'shortcuts.dart';
 
 /// The desktop window: a sidebar (sections, your library and pins), the page, an optional side panel (queue
@@ -212,9 +217,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     final hasSong = ref.watch(mediaItemProvider).value != null;
     return DesktopShortcuts(
       onRun: _run,
-      child: Scaffold(
-        // a darker window behind rounded panes (sidebar, page, side panel)
-        backgroundColor: Color.alphaBlend(Colors.black.withValues(alpha: 0.5), cs.surface),
+      // keyboard focus shown with a ring; menus and panels the desktop's way
+      child: FocusRing(child: DesktopSheets(child: Scaffold(
+        backgroundColor: windowBackground(cs),
         body: Column(
           children: [
             Expanded(
@@ -241,7 +246,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                             canForward: _forward.isNotEmpty,
                             onBack: back,
                             onForward: forward,
-                            searchBox: !widget.location.startsWith('/search'), // that page has its own
+                            // one search box, always here: on the Search page it searches as you type
+                            onSearchPage: widget.location.startsWith('/search'),
+                            offline: ref.watch(offlineProvider),
                             query: widget.location.startsWith('/search')
                                 ? Uri.parse(widget.location).queryParameters['q'] ?? ''
                                 : '',
@@ -270,9 +277,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                           SidePanel.queue => SongDropTarget(
                             radius: 12,
                             onDrop: (songs) => dropOnQueue(context, songs),
-                            child: const QueueScreen(embedded: true),
+                            child: QueueScreen(embedded: true, onClose: () => _show(SidePanel.queue)),
                           ),
-                          _ => const _LyricsPanel(),
+                          _ => _LyricsPanel(onClose: () => _show(SidePanel.lyrics)),
                         },
                       ),
                     ),
@@ -285,10 +292,17 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
             if (hasSong) PlayerBar(panel: _shown, onPanel: _show),
           ],
         ),
-      ),
+      ))),
     );
   }
 }
+
+/// The window behind the rounded panes (sidebar, page, side panel), where the player bar sits: darker than the
+/// panes on the dark theme; on the light theme a soft gray (half black made it a muddy gray that the player
+/// bar's gray text barely showed on).
+Color windowBackground(ColorScheme cs) => cs.brightness == Brightness.dark
+    ? Color.alphaBlend(Colors.black.withValues(alpha: 0.5), cs.surface)
+    : Color.alphaBlend(cs.onSurface.withValues(alpha: 0.07), cs.surface);
 
 /// A rounded page area, like the panes of a desktop music app.
 class _Pane extends StatelessWidget {
@@ -463,9 +477,15 @@ class _Sidebar extends ConsumerWidget {
             ),
           ),
         ),
+        // a line between the scrolling list and what stays at the bottom; the same right inset as the rows
+        // above (they leave a lane for the scrollbar)
+        const Divider(height: 9, indent: 16, endIndent: 26),
         if (online.isNotEmpty)
-          Padding(padding: const EdgeInsets.fromLTRB(8, 0, 8, 4), child: _DeviceHint(online.first)),
-        item(const SideItem('Settings', Icons.settings_rounded, '/settings')),
+          Padding(padding: const EdgeInsets.fromLTRB(8, 0, 18, 4), child: _DeviceHint(online.first)),
+        Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: item(const SideItem('Settings', Icons.settings_rounded, '/settings')),
+        ),
         const SizedBox(height: 8),
       ],
     );
@@ -510,12 +530,25 @@ class _DeviceHint extends StatelessWidget {
 }
 
 class _LyricsPanel extends ConsumerWidget {
-  const _LyricsPanel();
+  const _LyricsPanel({required this.onClose});
+  final VoidCallback onClose;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final song = ref.watch(currentSongProvider);
     return Scaffold(
-      appBar: AppBar(automaticallyImplyLeading: false, title: const Text('Lyrics')),
+      // the same small header as Now playing and the queue
+      appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'Hide the lyrics',
+          icon: const Icon(Icons.keyboard_double_arrow_right_rounded, size: 20),
+          onPressed: onClose,
+        ),
+        centerTitle: true,
+        toolbarHeight: 60,
+        titleTextStyle: Theme.of(context).textTheme.titleSmall,
+        title: const Text('Lyrics'),
+        actions: const [SizedBox(width: 48)],
+      ),
       body: song == null
           ? const Center(child: Text('Nothing playing'))
           : LyricsView(key: ValueKey('lyrics-${song.id}'), song: song),
@@ -896,9 +929,10 @@ class _TopBar extends StatefulWidget {
     required this.onBack,
     required this.onForward,
     required this.query,
-    this.searchBox = true,
+    this.onSearchPage = false,
+    this.offline = false,
   });
-  final bool canBack, canForward, searchBox;
+  final bool canBack, canForward, onSearchPage, offline;
   final VoidCallback onBack, onForward;
   final String query;
 
@@ -913,9 +947,19 @@ class _TopBarState extends State<_TopBar> {
   late final _ctl = TextEditingController(text: widget.query);
 
   @override
+  void initState() {
+    super.initState();
+    searchBoxText ??= ValueNotifier(''); // the Search page shows no box of its own (search.dart)
+  }
+
+  @override
   void didUpdateWidget(_TopBar old) {
     super.didUpdateWidget(old);
     if (old.query != widget.query && !desktopSearchFocus.hasFocus) _ctl.text = widget.query;
+    // what the Search page follows: this box's text while it's open, nothing once it's left
+    if (old.onSearchPage != widget.onSearchPage || old.query != widget.query) {
+      searchBoxText?.value = widget.onSearchPage ? _ctl.text : '';
+    }
   }
 
   @override
@@ -942,20 +986,42 @@ class _TopBarState extends State<_TopBar> {
             onPressed: widget.canForward ? widget.onForward : null,
           ),
           const SizedBox(width: 8),
-          if (widget.searchBox)
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: SizedBox(
-                height: 40,
-                child: TextField(
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: SizedBox(
+              height: 40,
+              child: ListenableBuilder(
+                listenable: _ctl,
+                builder: (context, _) => TextField(
                   controller: _ctl,
                   focusNode: desktopSearchFocus,
                   textInputAction: TextInputAction.search,
+                  // on the Search page: results as you type (the page follows this box)
+                  onChanged: (q) {
+                    if (widget.onSearchPage) searchBoxText?.value = q;
+                  },
                   onSubmitted: (q) =>
                       context.go(q.trim().isEmpty ? '/search' : '/search?q=${Uri.encodeQueryComponent(q.trim())}'),
                   decoration: InputDecoration(
-                    hintText: 'What do you want to play?',
+                    hintText: widget.offline ? 'Search downloaded music' : 'What do you want to play?',
                     prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                    suffixIcon: _ctl.text.isNotEmpty
+                        ? IconButton(
+                            tooltip: 'Clear',
+                            icon: const Icon(Icons.close_rounded, size: 18),
+                            onPressed: () {
+                              _ctl.clear();
+                              if (widget.onSearchPage) searchBoxText?.value = '';
+                            },
+                          )
+                        // the Search page's "What's playing?" (it has no box of its own on the desktop)
+                        : widget.onSearchPage && !widget.offline && canIdentify
+                        ? IconButton(
+                            tooltip: 'Pitch · What\'s playing?',
+                            icon: const Icon(Icons.hearing_rounded, size: 18),
+                            onPressed: () => showWhatsPlaying(context),
+                          )
+                        : null,
                     contentPadding: EdgeInsets.zero,
                     isDense: true,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
@@ -965,6 +1031,7 @@ class _TopBarState extends State<_TopBar> {
                 ),
               ),
             ),
+          ),
         ],
       ),
     );
