@@ -37,9 +37,13 @@ Future<void> installDesktopUpdate(File tarball) async {
   await dir.rename(old.path); // the running app keeps its open files
   await app.parent.rename(dir.path);
   await staging.delete(recursive: true);
-  // the new version starts once this one has quit (only one Encore runs at a time); the caller quits
-  await Process.start('sh', ['-c', 'sleep 2; exec "\$0"', '${dir.path}/encore'], mode: ProcessStartMode.detached);
+  // the new version starts once this one has ended: while it runs, a new copy would only bring this
+  // window up and exit (only one Encore runs at a time). The caller quits; given up after a minute.
+  await Process.start('sh', ['-c', restartScript, '${dir.path}/encore', '$pid'], mode: ProcessStartMode.detached);
 }
+
+/// Waits for the old copy (the process given second) to end, then starts the new one (given first).
+const restartScript = r'i=0; while kill -0 "$1" 2>/dev/null && [ $i -lt 120 ]; do sleep 0.5; i=$((i+1)); done; exec "$0"';
 
 /// Installed by the setup program (it leaves its uninstaller next to encore.exe), so a new setup program
 /// can update it. The portable .zip has none: that copy is updated by hand.
