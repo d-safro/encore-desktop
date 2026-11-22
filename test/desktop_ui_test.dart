@@ -381,4 +381,29 @@ void main() {
     await t.pumpAndSettle();
     expect(t.getTopLeft(about).dy, lessThan(800)); // scrolled to it
   });
+
+  group('song tables have column names, in the rows\' columns', () {
+    testWidgets('a playlist: title, album, length', (t) async {
+      await pumpDesktop(t, '/playlist/pl2', size: const Size(1280, 1000));
+      final row = find.byType(SongTile).first;
+      final song = t.widget<SongTile>(row).song;
+      final title = find.descendant(of: row, matching: find.text(song.title));
+      final album = find.descendant(of: row, matching: find.text(song.album));
+      expect(t.getTopLeft(find.text('TITLE')).dx, t.getTopLeft(title).dx);
+      expect(t.getTopLeft(find.text('ALBUM')).dx, t.getTopLeft(album).dx);
+      expect(t.getTopLeft(find.text('TITLE')).dy, lessThan(t.getTopLeft(title).dy));
+    });
+
+    testWidgets('an album: track numbers, no album column', (t) async {
+      await pumpDesktop(t, '/album/al2', size: const Size(1280, 1000));
+      expect(find.text('#'), findsOneWidget);
+      expect(find.text('TITLE'), findsOneWidget);
+      expect(find.text('ALBUM'), findsNothing);
+    });
+
+    testWidgets('none on a narrow list', (t) async {
+      await pumpDesktop(t, '/playlist/pl2', size: const Size(900, 800)); // a 620 px page
+      expect(find.text('TITLE'), findsNothing);
+    });
+  });
 }
