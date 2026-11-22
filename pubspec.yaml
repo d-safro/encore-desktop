@@ -76,6 +76,8 @@ dependencies:
   sqflite_common_ffi: ^2.4.7
   tray_manager: ^0.5.2
   window_manager: ^0.5.1
+  screen_retriever: ^0.2.0 # the screens, so a window saved on one since unplugged opens on one you have
+  dbus: ^0.8.0 # whether the desktop has a tray (see trayShown)
   image_picker: ^1.2.4
   file_picker: ^13.4.0
   image: ^4.13.1
