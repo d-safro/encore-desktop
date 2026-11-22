@@ -322,4 +322,17 @@ void main() {
       });
     }
   });
+
+  testWidgets('Library › Playlists: covers in a grid like Albums, each with its menu', (t) async {
+    await pumpDesktop(t, '/library?tab=0', size: const Size(1280, 1200));
+    final liked = t.getTopLeft(find.text('Liked songs').last);
+    final first = t.getTopLeft(find.text('Morning Coffee').last);
+    final second = t.getTopLeft(find.text('Deep Focus').last);
+    expect(second.dy, first.dy); // side by side, not a list
+    expect(second.dx, greaterThan(first.dx));
+    expect(liked.dy, first.dy);
+    await t.tap(find.text('Deep Focus').last, buttons: kSecondaryButton);
+    await settle(t);
+    expect(find.text('Shuffle'), findsOneWidget); // the playlist's menu
+  });
 }
