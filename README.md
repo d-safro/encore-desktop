@@ -168,6 +168,10 @@ the setup program.
   restart and kept on the server (continue in another app or device).
 - Shuffle, repeat, speed and pitch, skip silence, sleep timer (minutes or end of song).
 - Crossfade (up to 12 s); albums played in order stay seamless unless you choose otherwise.
+- DJ (Settings › Playback, off at first): before every song, every 3rd or 5th, a line about the next one,
+  written by your server's AI (Ollama, from what your library knows: title, album, year, your plays) and read by
+  its voice (Piper), spoken over the song's start while the music dips, in your phone's language or the one you
+  pick (13 languages). Only while AI is on at the server.
 - Automix (Settings › Playback): the next song comes in where this one starts to fade, blending for 4 bars at its
   tempo (2–12 s); silence at the end of a song and at the start of the next is cut. Your server measures each
   song (mix-analyzer, the songs in your queue first); songs it hasn't measured use the crossfade.
