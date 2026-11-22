@@ -213,8 +213,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     return DesktopShortcuts(
       onRun: _run,
       child: Scaffold(
-        // a darker window behind rounded panes (sidebar, page, side panel)
-        backgroundColor: Color.alphaBlend(Colors.black.withValues(alpha: 0.5), cs.surface),
+        backgroundColor: windowBackground(cs),
         body: Column(
           children: [
             Expanded(
@@ -289,6 +288,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     );
   }
 }
+
+/// The window behind the rounded panes (sidebar, page, side panel), where the player bar sits: darker than the
+/// panes on the dark theme; on the light theme a soft gray (half black made it a muddy gray that the player
+/// bar's gray text barely showed on).
+Color windowBackground(ColorScheme cs) => cs.brightness == Brightness.dark
+    ? Color.alphaBlend(Colors.black.withValues(alpha: 0.5), cs.surface)
+    : Color.alphaBlend(cs.onSurface.withValues(alpha: 0.07), cs.surface);
 
 /// A rounded page area, like the panes of a desktop music app.
 class _Pane extends StatelessWidget {

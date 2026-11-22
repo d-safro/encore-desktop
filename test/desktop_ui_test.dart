@@ -1,10 +1,14 @@
 // The desktop window's look and feel (the UI audit's changes), on the real shell and screens with a pretend
 // server and player (support/ui_rig.dart).
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:encore/core/appearance.dart';
+import 'package:encore/app.dart' show encoreTheme;
 import 'package:encore/core/settings.dart';
+import 'package:encore/desktop/shell.dart' show windowBackground;
 import 'package:encore/ui/widgets.dart';
 
 import 'support/fake_server.dart' show albumArtist, artistJson, songJson;
@@ -119,5 +123,25 @@ void main() {
   testWidgets('concerts: one heading per month', (t) async {
     await pumpDesktop(t, '/concerts', size: const Size(1280, 1400));
     expect(find.text('Dec'), findsOneWidget); // six December shows, one "Dec"
+  });
+
+  group('the window behind the panes', () {
+    double contrast(Color a, Color b) {
+      final x = a.computeLuminance(), y = b.computeLuminance();
+      return (max(x, y) + 0.05) / (min(x, y) + 0.05);
+    }
+
+    for (final b in Brightness.values) {
+      test('${b.name}: the player bar\'s gray text reads on it', () {
+        final cs = encoreTheme(ColorScheme.fromSeed(seedColor: Color(const Settings().accentColor), brightness: b),
+            const Settings()).colorScheme;
+        final bg = windowBackground(cs);
+        expect(contrast(cs.onSurfaceVariant, bg), greaterThanOrEqualTo(4.5));
+        // a frame round the panes: a step from the surface, darker on dark, still light on light
+        expect(bg, isNot(cs.surface));
+        if (b == Brightness.light) expect(bg.computeLuminance(), greaterThan(0.7));
+        if (b == Brightness.dark) expect(bg.computeLuminance(), lessThan(cs.surface.computeLuminance()));
+      });
+    }
   });
 }
