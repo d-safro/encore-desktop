@@ -188,7 +188,8 @@ the setup program.
   own AI (music-lookup + Ollama, only while AI is on), cached per song: nothing leaves home.
 - Audiobooks (sign in to Audiobookshelf under Settings › Audiobooks; an Audiobooks tab appears): Continue
   listening, every book, chapters; played by Encore's own player (speed, sleep timer, lock screen) with your place
-  kept on Audiobookshelf, so its apps carry on from there. Books don't download for offline yet.
+  kept on Audiobookshelf, so its apps carry on from there. "Download for offline" keeps a book on the device
+  (it plays from there, also with no connection).
 - Internet radio: find stations in the Radio Browser directory or paste an address; shows the song playing.
 - Full-screen player coloured from the album art; swipe the cover to skip, double-tap to heart.
 
