@@ -263,6 +263,9 @@ the setup program.
   scrobbled, or shown as now playing. Open a file with Encore from a file manager (Android: "Open with";
   desktop: double-click, `encore song.flac`, or drop files on the window).
 - Hearts, 1–5 star ratings, playlists (create, add, rename, reorder, remove, delete), scrobbling.
+- Import a playlist from another app (Library › Playlists › + › Import from another app): a CSV export
+  (Exportify, TuneMyMusic, Soundiiz…), Spotify's "Download your data" JSON, an M3U or a text file of "Artist -
+  Title" lines. Each song is looked for on your server; ones you don't have can be got, then the playlist is made.
 - Don't suggest this song / Don't suggest <artist> (a song's menu): left out of autoplay, smart shuffle, radio,
   instant mixes and the weekly mixes, still played when you pick them; undo in Settings › Not suggested. Synced.
 - Invite to edit (a playlist's menu): a link like Jam's lets friends add songs from your library to that playlist
