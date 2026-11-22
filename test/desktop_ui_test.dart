@@ -306,4 +306,20 @@ void main() {
       expect(find.text('Songs'), findsWidgets);
     });
   });
+
+  group('page buttons instead of floating ones', () {
+    for (final (page, label) in [
+      ('/library?tab=0', 'New playlist'),
+      ('/library?tab=1', 'Add podcast'),
+      ('/radio', 'Add station'),
+    ]) {
+      testWidgets(label, (t) async {
+        await pumpDesktop(t, page);
+        expect(find.byType(FloatingActionButton), findsNothing);
+        final button = find.widgetWithText(AddButton, label);
+        expect(button, findsOneWidget);
+        expect(t.getTopLeft(button).dy, lessThan(220)); // at the top of the page
+      });
+    }
+  });
 }
