@@ -4,6 +4,8 @@
 
 #include <cstdio>
 #include <cwchar>
+#include <shellapi.h>
+#include <string>
 
 #include "flutter_window.h"
 #include "utils.h"
@@ -27,6 +29,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   if (single != nullptr && ::GetLastError() == ERROR_ALREADY_EXISTS) {
     HWND other = ::FindWindowW(L"ENCORE_WINDOW", nullptr);
     if (other != nullptr) {
+      // music files given (Explorer's "Open with", encore.exe song.flac): the running Encore plays them
+      int argc = 0;
+      wchar_t** argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
+      std::wstring files;
+      for (int i = 1; argv != nullptr && i < argc; i++) {
+        if (wcsncmp(argv[i], L"--", 2) != 0) files += std::wstring(argv[i]) + L"\n";
+      }
+      if (argv != nullptr) ::LocalFree(argv);
+      if (!files.empty()) {
+        COPYDATASTRUCT data{0x454E4346, static_cast<DWORD>((files.size() + 1) * sizeof(wchar_t)),
+                            const_cast<wchar_t*>(files.c_str())};
+        ::SendMessageW(other, WM_COPYDATA, 0, reinterpret_cast<LPARAM>(&data));
+      }
       ::ShowWindow(other, ::IsIconic(other) ? SW_RESTORE : SW_SHOW);
       ::SetForegroundWindow(other);
     }

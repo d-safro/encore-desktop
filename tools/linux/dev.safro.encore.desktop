@@ -9,5 +9,6 @@ Terminal=false
 Categories=AudioVideo;Audio;Player;Music;
 Keywords=music;navidrome;subsonic;player;podcast;
 StartupWMClass=dev.safro.encore
+MimeType=audio/mpeg;audio/flac;audio/x-flac;audio/mp4;audio/x-m4a;audio/aac;audio/ogg;audio/x-vorbis+ogg;audio/opus;audio/x-opus+ogg;audio/wav;audio/x-wav;audio/aiff;audio/x-aiff;audio/x-ape;audio/x-ms-wma;audio/webm;audio/x-matroska;
 SingleMainWindow=true
 X-KDE-StartupNotify=true

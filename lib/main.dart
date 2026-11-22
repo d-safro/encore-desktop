@@ -20,8 +20,11 @@ import 'data/db.dart';
 import 'data/devices.dart';
 import 'data/jam.dart';
 import 'data/library.dart';
+import 'data/local_android.dart';
+import 'data/local_files.dart';
 import 'desktop/desktop.dart';
 import 'playback/handler.dart';
+import 'playback/local_open.dart';
 import 'playback/widget_sync.dart';
 
 Future<void> main(List<String> args) async {
@@ -76,6 +79,10 @@ Future<void> main(List<String> args) async {
     startWidgetSync(audioHandler); // the home-screen widget (Android)
   }
   container.read(jamProvider); // picks up a Jam that was running when the app closed
+  // music that's only on this device (local_files.dart): Android's MediaStore; the desktop set its own source
+  if (!isDesktop) localSource = MediaStoreSource();
+  container.read(localLibraryProvider);
+  unawaited(listenForOpenedFiles(startedWith: isDesktop ? fileArgs(args) : const []));
 
   playerNotices.stream.listen((m) {
     messengerKey.currentState

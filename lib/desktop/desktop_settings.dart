@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:path/path.dart' as p;
 
+import 'local_folders_settings.dart';
+
 import 'desktop.dart';
 import 'shortcuts.dart';
 
@@ -65,6 +67,7 @@ class _DesktopSettingsState extends ConsumerState<DesktopSettings> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        const LocalFoldersSettings(),
         SwitchListTile(
           secondary: const Icon(Icons.close_fullscreen_rounded),
           title: const Text('Keep playing in the tray when closed'),

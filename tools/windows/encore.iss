@@ -14,6 +14,8 @@
 #endif
 
 [Setup]
+; Encore is in Explorer's "Open with" for music files (see [Registry])
+ChangesAssociations=yes
 AppId={{8C2B5D4E-7A1F-4E3B-9D6C-5F0A1B2C3D4E}
 AppName=Encore
 AppVersion={#AppVersion}
@@ -58,6 +60,39 @@ Name: "{autodesktop}\Encore"; Filename: "{app}\encore.exe"; Tasks: desktopicon
 [Registry]
 ; the same switch as Settings > Desktop > Start when you log in
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "Encore"; ValueData: """{app}\encore.exe"" --hidden"; Tasks: autostart; Flags: uninsdeletevalue
+; Explorer's "Open with": Encore is offered for music files (it doesn't take over the default app)
+Root: HKCU; Subkey: "Software\Classes\Encore.Audio"; ValueType: string; ValueData: "Music file"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Encore.Audio\DefaultIcon"; ValueType: string; ValueData: "{app}\encore.exe,0"
+Root: HKCU; Subkey: "Software\Classes\Encore.Audio\shell\open\command"; ValueType: string; ValueData: """{app}\encore.exe"" ""%1"""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\shell\open\command"; ValueType: string; ValueData: """{app}\encore.exe"" ""%1"""; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\.mp3\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.flac\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.m4a\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.aac\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.ogg\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.oga\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.opus\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.wav\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.aiff\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.aif\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.ape\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.wma\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.mka\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.webm\OpenWithProgids"; ValueType: string; ValueName: "Encore.Audio"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".mp3"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".flac"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".m4a"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".aac"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".ogg"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".oga"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".opus"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".wav"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".aiff"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".aif"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".ape"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".wma"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".mka"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\encore.exe\SupportedTypes"; ValueType: string; ValueName: ".webm"; ValueData: ""
 
 [Run]
 Filename: "{app}\encore.exe"; Description: "{cm:LaunchProgram,Encore}"; Flags: nowait postinstall skipifsilent

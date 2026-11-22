@@ -1,6 +1,11 @@
 #include "flutter_window.h"
 
 #include <optional>
+#include <sstream>
+
+#include <flutter/standard_method_codec.h>
+
+#include "utils.h"
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -25,6 +30,9 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+  files_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(), "encore/files",
+      &flutter::StandardMethodCodec::GetInstance());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   // Encore's Dart side shows the window itself (window_manager), so that
@@ -39,6 +47,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  files_channel_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -64,6 +73,22 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;
+    case WM_COPYDATA: {
+      // a second start of Encore with music files (main.cpp): one path per line, UTF-16
+      auto* data = reinterpret_cast<const COPYDATASTRUCT*>(lparam);
+      if (data != nullptr && data->dwData == 0x454E4346 && files_channel_ && data->cbData > 0) {
+        std::wstring all(reinterpret_cast<const wchar_t*>(data->lpData), data->cbData / sizeof(wchar_t));
+        flutter::EncodableList paths;
+        std::wstringstream lines(all);
+        std::wstring line;
+        while (std::getline(lines, line)) {
+          if (!line.empty()) paths.push_back(flutter::EncodableValue(Utf8FromUtf16(line.c_str())));
+        }
+        files_channel_->InvokeMethod("open", std::make_unique<flutter::EncodableValue>(paths));
+        return TRUE;
+      }
+      break;
+    }
   }
 
   return Win32Window::MessageHandler(hwnd, message, wparam, lparam);

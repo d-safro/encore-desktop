@@ -1,3 +1,5 @@
+import '../data/local_files.dart' show localSource;
+import 'local_folders.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -28,6 +30,7 @@ String scrubLogin(String text) =>
 
 /// Before anything opens a database or a player (main() calls this first).
 Future<void> initDesktopPlatform() async {
+  localSource = DesktopFolderSource(); // music in the folders you pick (Settings > Music on this computer)
   // mpv's warnings and errors (a song that won't open, a filter it refuses) go to the log
   Logger.root.level = Level.INFO;
   Logger.root.onRecord.listen((r) => debugPrint('Encore ${r.loggerName}: ${scrubLogin(r.message)}'));

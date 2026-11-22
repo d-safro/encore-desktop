@@ -59,6 +59,7 @@ final sideLibrary = [
   SideItem('Artists', Icons.person_rounded, '/library?tab=3', match: (l) => _libraryTab(l, 3)),
   const SideItem('Following', Icons.how_to_reg_rounded, '/following'),
   SideItem('Songs', Icons.music_note_rounded, '/library?tab=4', match: (l) => _libraryTab(l, 4)),
+  const SideItem('On this computer', Icons.computer_rounded, '/local'),
   SideItem('Genres', Icons.category_rounded, '/library?tab=6', match: (l) => _libraryTab(l, 6)),
   const SideItem('Folders', Icons.folder_rounded, '/folders'),
   const SideItem('Your listening', Icons.insights_rounded, '/stats'),

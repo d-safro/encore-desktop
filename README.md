@@ -255,6 +255,13 @@ the setup program.
 - Missing album art is found online (iTunes, then Deezer), and artist pictures from Deezer. Can be switched off.
 
 **Your stuff**
+- Music on this device (Library › Songs › On this device; On this computer in the desktop sidebar): music files
+  that aren't in your server's library. On the phone, Android's own list of audio files (asks for "Music and
+  audio" the first time); on the desktop, the folders in Settings › Desktop (~/Music at first), scanned and
+  kept up to date. Their tags and covers are read on the device. They show in search, play offline, go in the
+  queue, and in playlists kept on this device (with server songs too). They stay private: never uploaded,
+  scrobbled, or shown as now playing. Open a file with Encore from a file manager (Android: "Open with";
+  desktop: double-click, `encore song.flac`, or drop files on the window).
 - Hearts, 1–5 star ratings, playlists (create, add, rename, reorder, remove, delete), scrobbling.
 - Don't suggest this song / Don't suggest <artist> (a song's menu): left out of autoplay, smart shuffle, radio,
   instant mixes and the weekly mixes, still played when you pick them; undo in Settings › Not suggested. Synced.
