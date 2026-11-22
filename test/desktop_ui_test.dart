@@ -97,4 +97,22 @@ void main() {
       });
     }
   });
+
+  group('side panels share Now playing\'s header', () {
+    for (final (panel, close, title) in [
+      ('queue', 'Hide the queue', 'Queue · 6 songs'),
+      ('lyrics', 'Hide the lyrics', 'Lyrics'),
+      ('nowPlaying', 'Hide Now playing', 'Now playing'),
+    ]) {
+      testWidgets(panel, (t) async {
+        await pumpDesktop(t, '/home', extraPrefs: {'sidePanel': panel});
+        final heading = t.widget<Text>(find.text(title).first);
+        final style = DefaultTextStyle.of(t.element(find.text(title).first)).style.merge(heading.style);
+        expect(style.fontSize, Theme.of(t.element(find.text(title).first)).textTheme.titleSmall!.fontSize);
+        await t.tap(find.byTooltip(close));
+        await settle(t);
+        expect(find.byTooltip(close), findsNothing); // the panel closed
+      });
+    }
+  });
 }

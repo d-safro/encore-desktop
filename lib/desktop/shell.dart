@@ -270,9 +270,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                           SidePanel.queue => SongDropTarget(
                             radius: 12,
                             onDrop: (songs) => dropOnQueue(context, songs),
-                            child: const QueueScreen(embedded: true),
+                            child: QueueScreen(embedded: true, onClose: () => _show(SidePanel.queue)),
                           ),
-                          _ => const _LyricsPanel(),
+                          _ => _LyricsPanel(onClose: () => _show(SidePanel.lyrics)),
                         },
                       ),
                     ),
@@ -516,12 +516,25 @@ class _DeviceHint extends StatelessWidget {
 }
 
 class _LyricsPanel extends ConsumerWidget {
-  const _LyricsPanel();
+  const _LyricsPanel({required this.onClose});
+  final VoidCallback onClose;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final song = ref.watch(currentSongProvider);
     return Scaffold(
-      appBar: AppBar(automaticallyImplyLeading: false, title: const Text('Lyrics')),
+      // the same small header as Now playing and the queue
+      appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'Hide the lyrics',
+          icon: const Icon(Icons.keyboard_double_arrow_right_rounded, size: 20),
+          onPressed: onClose,
+        ),
+        centerTitle: true,
+        toolbarHeight: 60,
+        titleTextStyle: Theme.of(context).textTheme.titleSmall,
+        title: const Text('Lyrics'),
+        actions: const [SizedBox(width: 48)],
+      ),
       body: song == null
           ? const Center(child: Text('Nothing playing'))
           : LyricsView(key: ValueKey('lyrics-${song.id}'), song: song),
