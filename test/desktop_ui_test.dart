@@ -423,4 +423,18 @@ void main() {
       });
     }
   });
+
+  testWidgets('the Add to playlist dialog has its title, like the other dialogs', (t) async {
+    await pumpDesktop(t, '/album/al2');
+    await t.tap(find.byTooltip('Add to playlist').first);
+    await settle(t);
+    final dialog = find.byType(Dialog);
+    final title = find.descendant(of: dialog, matching: find.text('Add to playlist'));
+    expect(title, findsOneWidget);
+    final ctx = t.element(title);
+    expect(t.widget<Text>(title).style?.fontSize, Theme.of(ctx).textTheme.titleLarge?.fontSize);
+    // above the choices
+    final first = find.descendant(of: dialog, matching: find.text('New playlist'));
+    expect(t.getTopLeft(title).dy, lessThan(t.getTopLeft(first).dy));
+  });
 }
