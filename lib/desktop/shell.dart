@@ -27,6 +27,7 @@ import '../ui/widgets.dart';
 import 'desktop.dart';
 import 'drag.dart';
 import 'now_playing.dart';
+import 'sheets.dart';
 import 'shortcuts.dart';
 
 /// The desktop window: a sidebar (sections, your library and pins), the page, an optional side panel (queue
@@ -212,7 +213,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     final hasSong = ref.watch(mediaItemProvider).value != null;
     return DesktopShortcuts(
       onRun: _run,
-      child: Scaffold(
+      child: DesktopSheets(child: Scaffold(
         backgroundColor: windowBackground(cs),
         body: Column(
           children: [
@@ -284,7 +285,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
             if (hasSong) PlayerBar(panel: _shown, onPanel: _show),
           ],
         ),
-      ),
+      )),
     );
   }
 }

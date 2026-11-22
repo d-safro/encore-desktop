@@ -2,13 +2,16 @@
 // server and player (support/ui_rig.dart).
 import 'dart:math';
 
+import 'package:flutter/gestures.dart' show kSecondaryButton;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:encore/core/appearance.dart';
 import 'package:encore/app.dart' show encoreTheme;
 import 'package:encore/core/settings.dart';
+import 'package:encore/desktop/sheets.dart' show MenuLayout;
 import 'package:encore/desktop/shell.dart' show windowBackground;
+import 'package:encore/ui/sheets.dart';
 import 'package:encore/ui/widgets.dart';
 
 import 'support/fake_server.dart' show albumArtist, artistJson, songJson;
@@ -186,6 +189,53 @@ void main() {
       final title = find.text('Local 1'); // the rig's odd songs have no artist
       final row = find.ancestor(of: title, matching: find.byType(SongTile));
       expect((t.getCenter(title).dy - t.getCenter(row).dy).abs(), lessThan(2));
+    });
+  });
+
+  group('menus open where you click', () {
+    testWidgets('right-click on a song: a compact menu at the pointer, not a bottom sheet', (t) async {
+      await pumpDesktop(t, '/playlist/pl2');
+      final row = find.byType(SongTile).at(2);
+      final at = t.getCenter(row);
+      await t.tap(row, buttons: kSecondaryButton);
+      await settle(t);
+      expect(find.byType(BottomSheet), findsNothing);
+      final item = find.text('Play next');
+      expect(item, findsOneWidget);
+      final menu = t.getRect(find.ancestor(of: item, matching: find.byType(Material)).last);
+      expect(menu.width, lessThanOrEqualTo(MenuLayout.width));
+      expect(menu.left, closeTo(at.dx, 1)); // opens to the right of the pointer
+      expect(menu.bottom, lessThanOrEqualTo(800)); // moved up to stay inside the window
+      await t.tapAt(const Offset(5, 5)); // a click elsewhere closes it
+      await settle(t);
+      expect(find.text('Play next'), findsNothing);
+    });
+
+    test('a menu stays inside the window', () {
+      const window = Size(1000, 700), menu = Size(300, 400);
+      final l = MenuLayout(const Offset(900, 600));
+      final p = l.getPositionForChild(window, menu);
+      expect(p.dx, 600); // flipped to the pointer's left
+      expect(p.dy, 700 - MenuLayout.margin - 400); // moved up
+      expect(MenuLayout(null).getPositionForChild(window, menu), const Offset(350, 150)); // no pointer: the middle
+    });
+
+    testWidgets('the phone (nothing installed) keeps its bottom sheet', (t) async {
+      final before = sheetOpener;
+      sheetOpener = null;
+      addTearDown(() => sheetOpener = before);
+      await t.pumpWidget(MaterialApp(
+        home: Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () => showAppSheet(context: ctx, menu: true, builder: (_) => const Text('a menu')),
+            child: const Text('open'),
+          ),
+        ),
+      ));
+      await t.tap(find.text('open'));
+      await t.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.text('a menu'), findsOneWidget);
     });
   });
 }
