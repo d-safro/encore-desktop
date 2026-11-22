@@ -144,4 +144,11 @@ void main() {
       });
     }
   });
+
+  testWidgets('light theme: "About the artist" in the theme\'s text colour', (t) async {
+    await pumpDesktop(t, '/home', theme: 'light', size: const Size(1280, 1600), extraPrefs: {'sidePanel': 'nowPlaying'});
+    final heading = find.text('About the artist');
+    final cs = Theme.of(t.element(heading)).colorScheme;
+    expect(t.widget<Text>(heading).style?.color, cs.onSurface);
+  });
 }

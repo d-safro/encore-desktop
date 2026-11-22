@@ -190,37 +190,21 @@ class _AboutArtist extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // the heading above the picture, in the theme's colours: a white heading over a dark band
+              // turned gray-on-gray on the light theme and over a missing picture
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                child: Text('About the artist', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              ),
               AspectRatio(
                 aspectRatio: 16 / 10,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Cover(
-                      'ar-${song.artistId}',
-                      size: double.infinity,
-                      radius: 0,
-                      artistImage: true,
-                      icon: Icons.person_rounded,
-                      artist: song.artist,
-                    ),
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Colors.black54, Colors.transparent, Colors.transparent],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: 14,
-                      top: 12,
-                      child: Text(
-                        'About the artist',
-                        style: t.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  ],
+                child: Cover(
+                  'ar-${song.artistId}',
+                  size: double.infinity,
+                  radius: 0,
+                  artistImage: true,
+                  icon: Icons.person_rounded,
+                  artist: song.artist,
                 ),
               ),
               Padding(
