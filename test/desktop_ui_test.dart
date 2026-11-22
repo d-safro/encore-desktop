@@ -406,4 +406,21 @@ void main() {
       expect(find.text('TITLE'), findsNothing);
     });
   });
+
+  group('empty pages say what\'s missing', () {
+    for (final (page, title) in [
+      ('/library?tab=2', 'No albums yet'),
+      ('/liked', 'No liked songs yet'),
+      ('/search?q=zzqx', 'Nothing found for "zzqx"'),
+      ('/search', 'Search your library'),
+    ]) {
+      testWidgets(page, (t) async {
+        await pumpDesktop(t, page, server: 'empty', playing: false);
+        await settle(t);
+        final empty = find.byType(EmptyState);
+        expect(empty, findsOneWidget);
+        expect(find.descendant(of: empty, matching: find.text(title)), findsOneWidget);
+      });
+    }
+  });
 }
