@@ -171,6 +171,8 @@ the setup program.
 - Automix (Settings › Playback): the next song comes in where this one starts to fade, blending for 4 bars at its
   tempo (2–12 s); silence at the end of a song and at the start of the next is cut. Your server measures each
   song (mix-analyzer, the songs in your queue first); songs it hasn't measured use the crossfade.
+  Edit transitions (a playlist's menu): Smart, Fade or Cut for each song into the next, kept for that playlist
+  and synced to your other devices.
   When two songs' tempos are within 6%, the next one comes in at the first one's tempo (pitch kept), beat on
   beat, and eases back to its own during the blend. The queue shows each song's BPM.
 - Cast to Chromecast / Google Cast speakers and TVs on your Wi-Fi. The phone stays the remote and passes
