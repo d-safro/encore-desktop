@@ -3,6 +3,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'package:encore/core/appearance.dart';
+import 'package:encore/core/settings.dart';
 import 'package:encore/ui/widgets.dart';
 
 import 'support/fake_server.dart' show albumArtist, artistJson, songJson;
@@ -31,6 +33,44 @@ void main() {
       final names = find.text(artist);
       expect(names, findsWidgets);
       expect(find.ancestor(of: names, matching: find.byType(Tappable)), findsNothing);
+    });
+  });
+
+  group('shelf arrows', () {
+    Future<void> shelf(WidgetTester t, int cards) async {
+      t.view.physicalSize = const Size(1000, 600);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(MaterialApp(
+        theme: ThemeData(extensions: [AppLook.from(const Settings())]),
+        home: Scaffold(
+          body: Shelf(title: 'Albums', children: [for (var i = 0; i < cards; i++) const SizedBox(width: 150)]),
+        ),
+      ));
+      await t.pump(); // the row's size is known after a frame
+      await t.pump();
+    }
+
+    IconButton arrow(WidgetTester t, String tip) =>
+        t.widget<IconButton>(find.ancestor(of: find.byTooltip(tip), matching: find.byType(IconButton)).first);
+
+    testWidgets('none when the row fits', (t) async {
+      await shelf(t, 3);
+      expect(find.byTooltip('Scroll Albums back'), findsNothing);
+      expect(find.byTooltip('Scroll Albums on'), findsNothing);
+    });
+
+    testWidgets('a row that overflows: only the way it can go', (t) async {
+      await shelf(t, 20);
+      expect(arrow(t, 'Scroll Albums back').onPressed, isNull); // at the start
+      expect(arrow(t, 'Scroll Albums on').onPressed, isNotNull);
+      await t.tap(find.byTooltip('Scroll Albums on'));
+      await t.pumpAndSettle();
+      expect(arrow(t, 'Scroll Albums back').onPressed, isNotNull);
+      final list = t.state<ScrollableState>(find.byType(Scrollable).first).position;
+      list.jumpTo(list.maxScrollExtent);
+      await t.pump();
+      expect(arrow(t, 'Scroll Albums on').onPressed, isNull); // at the end
     });
   });
 }
