@@ -65,8 +65,24 @@ Future<void> installWindowsUpdate(File setup) async {
 /// for. Without it the update is shown as a command to run instead.
 String? pkexec() => ['/usr/bin/pkexec', '/bin/pkexec'].where((p) => File(p).existsSync()).firstOrNull;
 
-/// The package manager command that installs the local package file [path] of [kind] (deb, rpm, arch), or null.
-List<String>? packageInstallCommand(String kind, String path, {bool Function(String) exists = _exists}) => switch (kind) {
+/// Encore runs in a Flatpak (tools/flatpak).
+bool inFlatpak({String info = '/.flatpak-info'}) => File(info).existsSync();
+
+/// Which installation this Flatpak is in, as `flatpak install` takes it: --user (~/.local/share/flatpak, no
+/// password) or --system (for everyone; the system asks for your password).
+String flatpakInstallation({String info = '/.flatpak-info'}) {
+  try {
+    final line = File(info).readAsLinesSync().where((l) => l.startsWith('app-path=')).firstOrNull ?? '';
+    return line.contains('/.local/share/flatpak/') ? '--user' : '--system';
+  } catch (_) {
+    return '--user';
+  }
+}
+
+/// The package manager command that installs the local package file [path] of [kind] (deb, rpm, arch, flatpak),
+/// or null. A Flatpak's is run on the computer, outside the sandbox (flatpak-spawn --host).
+List<String>? packageInstallCommand(String kind, String path, {bool Function(String) exists = _exists, String? installation}) => switch (kind) {
+  'flatpak' => ['flatpak-spawn', '--host', 'flatpak', 'install', installation ?? flatpakInstallation(), '-y', '--noninteractive', path],
   'deb' => ['apt-get', 'install', '-y', path],
   'arch' => ['pacman', '-U', '--noconfirm', path],
   // Fedora's dnf, else openSUSE's zypper (the package isn't signed: the release's checksum was checked instead)
@@ -80,6 +96,7 @@ bool _exists(String p) => File(p).existsSync();
 /// Installs the downloaded package with the system's package manager, as root through pkexec (the system asks for
 /// your password in its own window), then starts the new version once this one has quit (the caller quits).
 Future<void> installSystemPackage(File package, String kind) async {
+  if (kind == 'flatpak') return _installFlatpak(package);
   final px = pkexec();
   final cmd = packageInstallCommand(kind, package.path);
   if (px == null || cmd == null) throw const FileSystemException('No way to install packages here');
@@ -93,3 +110,30 @@ Future<void> installSystemPackage(File package, String kind) async {
   // the package put the new version where this one runs from (a running program keeps its old files open)
   await Process.start('sh', ['-c', restartScript, Platform.resolvedExecutable, '$pid'], mode: ProcessStartMode.detached);
 }
+
+/// The host's flatpak installs the downloaded .flatpak over this copy (it sees only paths outside the sandbox's
+/// own /tmp, so the file goes to Encore's cache folder, the same path on both sides). The new version starts once
+/// this one has quit (the caller quits): the host waits for this copy to end, then runs it again.
+Future<void> _installFlatpak(File bundle) async {
+  final cache = Platform.environment['XDG_CACHE_HOME'];
+  if (cache == null || cache.isEmpty) throw const FileSystemException('No folder outside the sandbox for the update');
+  final shared = await bundle.copy('$cache/encore-update.flatpak');
+  try {
+    final cmd = packageInstallCommand('flatpak', shared.path)!;
+    final r = await Process.run(cmd.first, cmd.sublist(1));
+    if (r.exitCode != 0) {
+      final err = '${r.stderr}'.trim().split('\n').where((l) => l.trim().isNotEmpty).toList();
+      // a system-wide copy: the password window was closed
+      if (err.any((l) => l.contains('Not authorized') || l.contains('dismissed'))) throw const core.PackageInstallCancelled();
+      throw FileSystemException(err.isEmpty ? 'flatpak failed (${r.exitCode})' : err.last);
+    }
+  } finally {
+    await shared.delete().catchError((_) => shared);
+  }
+  final id = Platform.environment['FLATPAK_ID'] ?? 'dev.safro.encore';
+  await Process.start('flatpak-spawn', ['--host', 'sh', '-c', flatpakRestartScript, id], mode: ProcessStartMode.detached);
+}
+
+/// Run on the computer: waits (up to a minute) for the app given first to have no copy running, then starts it.
+const flatpakRestartScript =
+    r'i=0; while flatpak ps --columns=application 2>/dev/null | grep -qx "$0" && [ $i -lt 120 ]; do sleep 0.5; i=$((i+1)); done; exec flatpak run "$0"';

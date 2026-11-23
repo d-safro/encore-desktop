@@ -1,0 +1,115 @@
+# Encore as a Flatpak, from the Linux release archive (tools/linux/build.sh) and libmpv built here.
+# Build it with tools/flatpak/build.sh, which puts the archive next to this file as encore-linux.tar.gz.
+id: dev.safro.encore
+# GTK 3 and libsecret come from the GNOME runtime; FFmpeg too (more codecs from the codecs-extra extension,
+# installed with the runtime)
+runtime: org.gnome.Platform
+runtime-version: '51'
+sdk: org.gnome.Sdk
+command: encore
+
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --device=dri
+  # Music on this computer: ~/Music unless you choose other folders (the folder chooser grants those)
+  - --filesystem=xdg-music:ro
+  # Pictures and lyrics cards you save go to Downloads
+  - --filesystem=xdg-download
+  # The server password, in the desktop's keyring (Secret Service)
+  - --talk-name=org.freedesktop.secrets
+  # Whether the computer is online (NetworkManager, on the system bus)
+  - --system-talk-name=org.freedesktop.NetworkManager
+  # Notifications ("Now playing")
+  - --talk-name=org.freedesktop.Notifications
+  # The tray icon: the tray library registers as org.kde.StatusNotifierItem-<pid>-1, and the app is PID 2
+  # in the sandbox
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --own-name=org.kde.StatusNotifierItem-2-1
+  # Media keys, the desktop's media controls and KDE Connect (MPRIS)
+  - --own-name=org.mpris.MediaPlayer2.encore
+  # One-button updates: the new .flatpak is installed by the host's flatpak (Settings › Check now)
+  - --talk-name=org.freedesktop.Flatpak
+
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /share/man
+  - /share/doc
+  - '*.la'
+  - '*.a'
+
+modules:
+  - shared-modules/libayatana-appindicator/libayatana-appindicator-gtk3.json
+
+  # libmpv, which plays the music (media_kit loads it). Audio is all it does here: no player program, Lua,
+  # JavaScript or video outputs it doesn't need.
+  - name: libass
+    config-opts:
+      - --disable-static
+      - --disable-libunibreak
+    sources:
+      - type: archive
+        url: https://github.com/libass/libass/releases/download/0.17.5/libass-0.17.5.tar.xz
+        sha256: 2dca25c0e0c837ddf00b52011b3f82cac1e4ddd3ad018227806b0c2288864acc
+
+  - name: libplacebo
+    buildsystem: meson
+    config-opts:
+      - -Ddemos=false
+      - -Dtests=false
+      - -Dvulkan=disabled
+      - -Dshaderc=disabled
+      - -Dglslang=disabled
+      - -Dd3d11=disabled
+      - -Dlcms=disabled
+      - -Dlibdovi=disabled
+    sources:
+      - type: git
+        url: https://github.com/haasn/libplacebo.git
+        tag: v7.387.0
+        commit: 275f7dea27924cdd34ab2e6c20e448b6bc4fab65
+
+  - name: mpv
+    buildsystem: meson
+    config-opts:
+      - -Dlibmpv=true
+      - -Dcplayer=false
+      - -Dlua=disabled
+      - -Djavascript=disabled
+      - -Dmanpage-build=disabled
+      - -Dhtml-build=disabled
+      - -Dpdf-build=disabled
+      - -Dvulkan=disabled
+      - -Dlibarchive=disabled
+      - -Dlibbluray=disabled
+      - -Ddvdnav=disabled
+      - -Dcdda=disabled
+      - -Dsdl2-audio=disabled
+      - -Dsdl2-video=disabled
+      - -Dsdl2-gamepad=disabled
+    sources:
+      - type: archive
+        url: https://github.com/mpv-player/mpv/archive/refs/tags/v0.42.0.tar.gz
+        sha256: bcfebbfa2b65a6d88dc97ea18117831072373e38b5785a2afb874ed4df5070dd
+
+  # Encore itself: the Flutter program and its libraries, as in the release archive
+  - name: encore
+    buildsystem: simple
+    build-commands:
+      - cp -a app ${FLATPAK_DEST}/lib/encore
+      - install -d ${FLATPAK_DEST}/bin
+      - ln -s ../lib/encore/encore ${FLATPAK_DEST}/bin/encore
+      - install -Dm644 dev.safro.encore.desktop ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
+      - install -Dm644 dev.safro.encore.metainfo.xml ${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml
+      - |
+        for d in icons/*x*; do
+          install -Dm644 "$d/dev.safro.encore.png" "${FLATPAK_DEST}/share/icons/hicolor/${d#icons/}/apps/${FLATPAK_ID}.png"
+        done
+        install -Dm644 icons/scalable/dev.safro.encore.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
+    sources:
+      - type: archive
+        path: encore-linux.tar.gz

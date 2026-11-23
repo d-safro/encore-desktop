@@ -120,8 +120,11 @@ class DesktopUpdater extends core.UpdateInstaller {
       Platform.isWindows ? updater.installWindowsUpdate(file) : updater.installDesktopUpdate(file);
 
   @override
-  Future<bool> canInstallPackage(String kind) async =>
-      Platform.isLinux && updater.pkexec() != null && updater.packageInstallCommand(kind, '/x') != null;
+  Future<bool> canInstallPackage(String kind) async => !Platform.isLinux
+      ? false
+      : kind == 'flatpak'
+      ? updater.inFlatpak() && File('/usr/bin/flatpak-spawn').existsSync()
+      : updater.pkexec() != null && updater.packageInstallCommand(kind, '/x') != null;
 
   @override
   Future<void> installPackage(File file, String kind) => updater.installSystemPackage(file, kind);
