@@ -17,7 +17,7 @@ import 'package:encore/desktop/shell.dart' show windowBackground;
 import 'package:encore_core/ui/sheets.dart';
 import 'package:encore_core/ui/widgets.dart';
 
-import 'support/fake_server.dart' show albumArtist, artistJson, songJson;
+import 'support/fake_server.dart' show albumArtist, artistJson, serverGets, songJson;
 import 'support/ui_rig.dart';
 
 void main() {
@@ -514,6 +514,33 @@ void main() {
       expect(t.getCenter(back).dx, lessThan(t.getCenter(forward).dx));
       await t.tap(forward);
       expect(skipsAsked, const [Duration(seconds: 30)]);
+    });
+  });
+
+  group('Getting your songs', () {
+    tearDown(() => serverGets = false);
+
+    testWidgets('not in the sidebar when the server doesn\'t say what it\'s getting', (t) async {
+      await pumpDesktop(t, '/home', size: const Size(1280, 1600)); // (tall: the whole sidebar is built)
+      await t.pumpAndSettle();
+      expect(find.text('Downloaded'), findsOneWidget);
+      expect(find.text('Getting'), findsNothing);
+    });
+
+    testWidgets('in the sidebar with Conductor, and the page shows what\'s on its way', (t) async {
+      serverGets = true;
+      await pumpDesktop(t, '/home', size: const Size(1280, 1600));
+      await t.pumpAndSettle();
+      expect(find.text('Getting'), findsOneWidget);
+      await t.tap(find.text('Getting'));
+      await t.pumpAndSettle();
+      expect(find.text('Getting your songs'), findsWidgets);
+      expect(find.text('On their way'), findsOneWidget);
+      expect(find.text('Moving Song'), findsOneWidget);
+      expect(find.textContaining('Downloading · 55%'), findsOneWidget);
+      expect(find.text('Recently arrived'), findsOneWidget);
+      expect(find.byTooltip('What to do with it'), findsNothing);
+      expect(t.takeException(), isNull);
     });
   });
 }
