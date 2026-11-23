@@ -19,7 +19,7 @@ here=$root/tools/flatpak
 cp "$archive" "$here/encore-linux.tar.gz"
 trap 'rm -f "$here/encore-linux.tar.gz"' EXIT
 if command -v flatpak-builder >/dev/null; then builder=(flatpak-builder)
-else builder=(flatpak run --filesystem="$root" org.flatpak.Builder); fi
+else builder=(flatpak run --no-documents-portal --filesystem="$root" org.flatpak.Builder); fi
 work=$root/build/flatpak
 mkdir -p "$work" dist
 "${builder[@]}" --force-clean --user --disable-rofiles-fuse --state-dir="$work/state" --repo="$work/repo" \
