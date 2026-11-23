@@ -1,12 +1,17 @@
-# Builds the desktop apps: Linux (archive, RPM, .deb, Arch package) and Windows (setup program, portable
-# zip). Each package is installed in a clean container and started with --version before anything is
+# Builds the desktop apps: Linux (archive, RPM, .deb, Arch package, Flatpak) and Windows (setup program,
+# portable zip). Each package is installed in a clean container and started with --version before anything is
 # attached. Pushing a v* tag attaches the files to that release (made as a draft if it isn't there yet);
 # a ci-* tag, or running it by hand ("Run workflow"), only builds them, as downloadable artifacts.
+# Once a week only the Flatpak is built, from the latest release's archive: that keeps flatpak-builder's cache
+# (libmpv and the rest) on main, where tag runs can use it (a cache made by one tag run can't be used by another,
+# and one nobody uses for 7 days is deleted).
 name: Desktop builds
 on:
   push:
     tags: ['v*', 'ci-*']
   workflow_dispatch:
+  schedule:
+    - cron: '23 5 * * 1'
 
 permissions:
   contents: write
@@ -20,6 +25,7 @@ jobs:
   linux:
     # Built here, the programs can need a C library as new as this machine's (glibc 2.39): the .deb asks for
     # the newest one they use (tools/debian/build-deb.sh), so it's for Debian 13+ and Ubuntu 24.04+.
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -58,6 +64,7 @@ jobs:
             dist/PKGBUILD
 
   windows:
+    if: github.event_name != 'schedule'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -89,9 +96,69 @@ jobs:
             dist/*.exe
             dist/*.zip
 
+  flatpak:
+    # From the Linux job's archive (the one the release ships), with tools/flatpak/build.sh, in Flathub's builder
+    # image: flatpak-builder and the GNOME 51 SDK are in it, and privileged, its sandbox (bubblewrap) works.
+    needs: linux
+    if: ${{ !cancelled() && (needs.linux.result == 'success' || github.event_name == 'schedule') }}
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-51
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        if: github.event_name != 'schedule'
+        with:
+          name: linux
+          path: linux
+      - name: The latest release's archive (weekly run)
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          url=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/latest" \
+            | grep -o '"browser_download_url": *"[^"]*-linux-x86_64\.tar\.gz"' | cut -d'"' -f4)
+          mkdir -p linux && curl -fsSL -o "linux/${url##*/}" "$url"
+      # flatpak-builder's state (downloads and built modules), so libmpv, libplacebo and the rest are only built
+      # again when they change. The key is the SDK and the manifest without Encore's module: Encore is built
+      # again every time anyway (build.sh puts the archive's checksum in the manifest).
+      - name: The key for flatpak-builder's cache
+        id: cache-key
+        run: |
+          sdk=$(flatpak info --show-commit org.gnome.Sdk//51 | cut -c1-12)
+          modules=$({ sed '/^  - name: encore$/,$d' tools/flatpak/dev.safro.encore.yml
+            find tools/flatpak/shared-modules -type f -print0 | sort -z | xargs -0 cat; } | sha256sum | cut -c1-16)
+          echo "sdk=$sdk" >> "$GITHUB_OUTPUT"
+          echo "key=flatpak-builder-$sdk-$modules" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: build/flatpak/state
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            flatpak-builder-${{ steps.cache-key.outputs.sdk }}-
+            flatpak-builder-
+      - name: Flatpak
+        run: |
+          archive=$(ls linux/encore-*-linux-x86_64.tar.gz)
+          tools/flatpak/build.sh "$archive"
+      - name: The Flatpak installs and starts
+        run: |
+          archive=$(ls linux/encore-*-linux-x86_64.tar.gz)
+          version=${archive#linux/encore-}; version=${version%-linux-x86_64.tar.gz}
+          flatpak install --user -y --noninteractive dist/encore-*-x86_64.flatpak
+          out=$(dbus-run-session -- flatpak run --no-a11y-bus dev.safro.encore --version)
+          echo "$out"
+          case "$out" in "Encore $version" | "Encore $version+"*) ;; *) echo "not Encore $version"; exit 1 ;; esac
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'schedule'
+        with:
+          name: flatpak
+          path: dist/*.flatpak
+
   attach:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [linux, windows]
+    needs: [linux, windows, flatpak]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -102,7 +169,7 @@ jobs:
       - name: Attach to the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: tools/release/upload.sh "${GITHUB_REF_NAME}" dist/*.tar.gz dist/*.rpm dist/*.deb dist/*.pkg.tar.zst dist/PKGBUILD dist/*.exe dist/*.zip
+        run: tools/release/upload.sh "${GITHUB_REF_NAME}" dist/*.tar.gz dist/*.rpm dist/*.deb dist/*.pkg.tar.zst dist/PKGBUILD dist/*.flatpak dist/*.exe dist/*.zip
 
       # ── For desktop copies up to 1.9.x (they look for updates in d-safro/encore) ──
       # The same files also go on d-safro/encore's release of the same version (a draft until the phone's
@@ -114,4 +181,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PHONE_REPO_TOKEN }}
           GH_REPO: d-safro/encore
-        run: tools/release/upload.sh "${GITHUB_REF_NAME}" dist/*.tar.gz dist/*.rpm dist/*.deb dist/*.pkg.tar.zst dist/PKGBUILD dist/*.exe dist/*.zip
+        run: tools/release/upload.sh "${GITHUB_REF_NAME}" dist/*.tar.gz dist/*.rpm dist/*.deb dist/*.pkg.tar.zst dist/PKGBUILD dist/*.flatpak dist/*.exe dist/*.zip
