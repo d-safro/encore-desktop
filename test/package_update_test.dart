@@ -16,6 +16,14 @@ void main() {
     expect(packageInstallCommand('rpm', '/u/e.rpm', exists: none), isNull);
   });
 
+  test('a closed password window is "cancelled"; a desktop without one gets the terminal command', () {
+    expect(pkexecRefused(126, ''), isTrue);
+    expect(pkexecRefused(127, 'Error executing command as another user: Not authorized\n\nThis incident has been reported.\n'),
+        isTrue);
+    expect(pkexecRefused(127, 'Error executing command as another user: No authentication agent found.\n'), isFalse);
+    expect(pkexecRefused(100, 'E: Unable to locate package'), isFalse);
+  });
+
   test('only the copy a package installed is updated with the package manager', () {
     expect(runsFromSystemPackage(exe: '/usr/lib/encore/encore'), isTrue); // .deb, Arch
     expect(runsFromSystemPackage(exe: '/usr/lib64/encore/encore'), isTrue); // RPM

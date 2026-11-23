@@ -61,6 +61,11 @@ Future<void> installWindowsUpdate(File setup) async {
   );
 }
 
+/// pkexec ended without running the package manager because you said no: 126, the password window was closed; 127
+/// "Not authorized", the password refused. Its other 127 (no password window on this desktop: "No authentication
+/// agent found") is a failure, so the terminal command is shown instead.
+bool pkexecRefused(int exitCode, String stderr) => exitCode == 126 || (exitCode == 127 && stderr.contains('Not authorized'));
+
 /// The system's password window, for installing a package as root: pkexec (polkit), which every desktop has an agent
 /// for. Without it the update is shown as a command to run instead.
 String? pkexec() => ['/usr/bin/pkexec', '/bin/pkexec'].where((p) => File(p).existsSync()).firstOrNull;
@@ -113,8 +118,7 @@ Future<void> installSystemPackage(File package, String kind) async {
   final cmd = packageInstallCommand(kind, package.path);
   if (px == null || cmd == null) throw const FileSystemException('No way to install packages here');
   final r = await Process.run(px, cmd);
-  // 126: the password window was closed (or the password refused three times); 127: not allowed at all
-  if (r.exitCode == 126 || r.exitCode == 127) throw const core.PackageInstallCancelled();
+  if (pkexecRefused(r.exitCode, '${r.stderr}')) throw const core.PackageInstallCancelled();
   if (r.exitCode != 0) {
     final err = '${r.stderr}'.trim().split('\n').where((l) => l.trim().isNotEmpty).toList();
     throw FileSystemException(err.isEmpty ? '${cmd.first} failed (${r.exitCode})' : err.last);
