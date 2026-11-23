@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="../../releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/d-safro/encore-desktop?label=release"></a>
-  <img alt="Linux" src="https://img.shields.io/badge/Linux-tar.gz%20%7C%20RPM%20%7C%20deb%20%7C%20Arch-555">
+  <img alt="Linux" src="https://img.shields.io/badge/Linux-Flatpak%20%7C%20tar.gz%20%7C%20RPM%20%7C%20deb%20%7C%20Arch-555">
   <img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4">
   <a href="https://github.com/d-safro/encore"><img alt="Phone app" src="https://img.shields.io/badge/phone-Android%20%7C%20Wear%20OS-3ddc84"></a>
 </p>
@@ -28,7 +28,8 @@
   - listening together;
   - casting to speakers and TVs.
 - **Works with your phone:** sign in with your phone, continue where you left off, and use either as a remote for the other.
-- **Updates itself** (the tar.gz and the Windows setup), dark by default with a light theme.
+- **Updates itself** with one button (the tar.gz, the Flatpak, the Linux packages and the Windows setup), dark by
+  default with a light theme.
 
 The full feature list is in the phone app's [docs/FEATURES.md](https://github.com/d-safro/encore/blob/main/docs/FEATURES.md); the code both apps share is [encore-core](https://github.com/d-safro/encore-core).
 
@@ -44,12 +45,22 @@ and Windows 10 or 11). Every release on the [Releases](../../releases/latest) pa
 
 | File | For |
 |---|---|
+| `encore-<version>-x86_64.flatpak` | any Linux with Flatpak: everything it needs comes with it, installed for yourself, and Encore updates itself |
 | `encore-<version>-linux-x86_64.tar.gz` | any Linux on a 64-bit PC: install it for yourself, no password needed, and Encore updates itself |
 | `encore-<version>-1.x86_64.rpm` | Fedora: install it for every user with dnf |
 | `encore_<version>_amd64.deb` | Debian 13+, Ubuntu 24.04+, Linux Mint 22+ and the like: install it with apt |
 | `encore-bin-<version>-1-x86_64.pkg.tar.zst` and `PKGBUILD` | Arch Linux, Manjaro, EndeavourOS: install it with pacman |
 | `encore-<version>-windows-x64-setup.exe` | Windows 10 / 11: installs for you (no administrator), and Encore updates itself |
 | `encore-<version>-windows-x64.zip` | Windows, portable: unpack anywhere and run `encore.exe` (update it by hand) |
+
+**Flatpak** (any Linux; the GNOME runtime it runs on comes from Flathub the first time):
+
+```bash
+flatpak install --user ./encore-*-x86_64.flatpak
+```
+
+It brings its own mpv. It sees your Music folder (other folders you pick in Settings), and Encore updates it from
+the release page with one button.
 
 **Linux, for yourself** (unpack, then run the installer in the folder; `./install.sh --uninstall` removes it again):
 
@@ -151,6 +162,7 @@ libayatana-appindicator-gtk3-devel lld rpm-build inkscape`):
 flutter run -d linux                 # try it
 tools/linux/build.sh                 # dist/: the .tar.gz, the .rpm and SHA256SUMS-linux.txt
 tools/linux/build.sh --deb --arch    # also the .deb and the Arch package (in podman/docker containers)
+tools/flatpak/build.sh               # dist/encore-<version>-x86_64.flatpak (needs org.flatpak.Builder and the GNOME 51 SDK)
 ```
 
 The Windows app can only be built on Windows (Flutter, Visual Studio's C++ tools, Rust and Inno Setup 6):
@@ -179,6 +191,7 @@ packages/just_audio_mpv/      just_audio on libmpv, with the equalizer and other
 packages/audio_service_smtc/  Windows' media controls for audio_service (through smtc_windows)
 tools/linux/                  .desktop entry, metainfo, install.sh, RPM spec, build.sh
 tools/debian/, tools/arch/    the .deb and the Arch package, made from the Linux archive
+tools/flatpak/                the Flatpak: manifest (libmpv and the tray library built in) and build.sh
 tools/windows/                the Windows setup program (Inno Setup) and build.ps1
 ```
 
