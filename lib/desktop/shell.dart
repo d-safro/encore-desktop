@@ -16,6 +16,7 @@ import 'package:encore_core/data/devices.dart';
 import 'package:encore_core/data/library.dart';
 import 'package:encore_core/data/library_pins.dart';
 import 'package:encore_core/data/models.dart';
+import 'package:encore_core/data/requests.dart' show requestsOfferedProvider;
 import 'package:encore_core/data/song_id.dart' show canIdentify;
 import '../playback/desktop_audio.dart';
 import 'package:encore_core/playback/handler.dart';
@@ -70,6 +71,7 @@ final sideLibrary = [
   const SideItem('Folders', Icons.folder_rounded, '/folders'),
   const SideItem('Your listening', Icons.insights_rounded, '/stats'),
   const SideItem('Downloaded', Icons.download_done_rounded, '/downloads'),
+  const SideItem('Getting', Icons.downloading_rounded, '/getting'), // (only when the server says what it's getting)
 ];
 
 /// What the side panel shows.
@@ -472,7 +474,8 @@ class _Sidebar extends ConsumerWidget {
                   _ => const <Widget>[],
                 },
                 header('Browse'),
-                for (final i in sideLibrary) item(i),
+                for (final i in sideLibrary)
+                  if (i.path != '/getting' || ref.watch(requestsOfferedProvider).value == true) item(i),
               ],
             ),
           ),

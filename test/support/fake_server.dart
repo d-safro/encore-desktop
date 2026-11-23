@@ -170,6 +170,16 @@ Map<String, dynamic> channelJson(int i, {bool episodes = false}) => {
 /// 'normal', 'empty' (a new server: nothing in it) or 'error' (every request fails).
 var serverMode = 'normal';
 
+/// The server says what it's getting (Conductor's encore.requests): a song looking, one downloading, one arrived.
+var serverGets = false;
+
+Map<String, dynamic> _request(String id, String title, String state, {double progress = 0, String? songId}) => {
+  'id': id, 'type': 'song', 'title': title, 'artist': _artistNames[1], 'album': '', 'duration': 200,
+  'state': state, 'progress': progress, 'reasons': ['heart'], 'users': ['me'], 'trial': false, 'kept': true,
+  'asked': '2026-11-23T10:00:00Z', 'actions': [], 'songId': ?songId,
+  if (songId != null) 'arrived': '2026-11-23T11:00:00Z',
+};
+
 /// Answers for each Subsonic method. Unknown methods get an empty "ok".
 Map<String, dynamic> answer(String method, Map<String, String> q) {
   if (serverMode == 'empty' && method != 'ping') return {};
@@ -407,6 +417,24 @@ Map<String, dynamic> answer(String method, Map<String, String> q) {
       };
     case 'getPlayQueue':
       return {};
+    case 'getOpenSubsonicExtensions':
+      return {
+        'openSubsonicExtensions': [
+          if (serverGets) {'name': 'encore.requests', 'versions': [1]},
+        ],
+      };
+    case 'getRequests':
+      final done = (q['state'] ?? '') == 'done';
+      final list = done
+          ? [_request('dz-t-3', 'Arrived Song', 'done', progress: 100, songId: songJson(0, 0)['id'] as String)]
+          : [_request('dz-t-1', 'Looking Song', 'searching'), _request('dz-t-2', 'Moving Song', 'downloading', progress: 55)];
+      return {
+        'requests': {
+          'total': list.length, 'offset': 0, 'onTrial': 0, 'downloadsPaused': false, 'canPick': false,
+          'counts': {'searching': 1, 'downloading': 1, 'done': 1},
+          'request': list,
+        },
+      };
     default:
       return {};
   }
