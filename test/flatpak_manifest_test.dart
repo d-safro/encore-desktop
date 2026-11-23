@@ -21,4 +21,8 @@ void main() {
     expect(flatpakMayOwn('org.mpris.MediaPlayer2.$mprisName.instance2'), isTrue);
     expect(flatpakMayOwn('org.mpris.MediaPlayer2.$mprisName.instance12345'), isTrue);
   });
+
+  test('the Flatpak may write its autostart entry (Start when you log in)', () {
+    expect(File('tools/flatpak/dev.safro.encore.yml').readAsStringSync(), contains('--filesystem=xdg-config/autostart:create'));
+  });
 }
