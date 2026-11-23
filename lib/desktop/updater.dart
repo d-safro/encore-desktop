@@ -43,6 +43,21 @@ Future<void> installDesktopUpdate(File tarball) async {
   await Process.start('sh', ['-c', restartScript, '${dir.path}/encore', '$pid'], mode: ProcessStartMode.detached);
 }
 
+// One install at a time: a second would unpack into the folder the first is swapping in, or overwrite the
+// Flatpak bundle it's installing.
+bool _installing = false;
+
+/// Runs [install] unless another install is running (then throws).
+Future<void> oneInstallAtATime(Future<void> Function() install) async {
+  if (_installing) throw const FileSystemException('Another update is being installed');
+  _installing = true;
+  try {
+    await install();
+  } finally {
+    _installing = false;
+  }
+}
+
 /// Waits for the old copy (the process given second) to end, then starts the new one (given first).
 const restartScript = r'i=0; while kill -0 "$1" 2>/dev/null && [ $i -lt 120 ]; do sleep 0.5; i=$((i+1)); done; exec "$0"';
 

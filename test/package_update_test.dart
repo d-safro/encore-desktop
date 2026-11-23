@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:encore/desktop/updater.dart';
@@ -84,5 +85,16 @@ void main() {
     expect(systemUpdateCommand(u, 'rpm'), 'sudo dnf install https://x/encore-1.13.0-1.x86_64.rpm');
     File('${root.path}/var/lib/dpkg/info/encore.list').createSync(recursive: true);
     expect(linuxPackageKind(root: root.path, exe: '/usr/lib/encore/encore'), 'deb');
+  });
+
+  test('only one update is installed at a time', () async {
+    final first = Completer<void>();
+    final running = oneInstallAtATime(() => first.future);
+    await expectLater(oneInstallAtATime(() async {}), throwsA(isA<FileSystemException>()));
+    first.complete();
+    await running;
+    await oneInstallAtATime(() async {}); // free again once it ended
+    await expectLater(oneInstallAtATime(() async => throw const FileSystemException('disk full')), throwsA(isA<FileSystemException>()));
+    await oneInstallAtATime(() async {}); // and once it failed
   });
 }
