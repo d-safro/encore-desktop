@@ -252,11 +252,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "v1.6.1"
-      resolved-ref: "fc70bc6f826a537e0bcb6b82c72d745d31b347d2"
+      ref: "v1.7.0"
+      resolved-ref: "0019ad3128df01b5442a9e6c7634a6a681767d3a"
       url: "https://github.com/d-safro/encore-core.git"
     source: git
-    version: "1.6.1"
+    version: "1.7.0"
   fake_async:
     dependency: transitive
     description:
