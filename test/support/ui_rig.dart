@@ -74,6 +74,8 @@ class _Handler extends EncoreAudioHandler {
   Song? get currentSong => fake.isEmpty ? null : fake.first;
   @override
   List<Song> get songs => fake;
+  @override
+  Future<void> skipBy(Duration by) async => skipsAsked.add(by);
 
   void announce() {
     if (fake.isEmpty) return;
@@ -83,6 +85,9 @@ class _Handler extends EncoreAudioHandler {
     playbackState.add(PlaybackState(processingState: AudioProcessingState.ready, queueIndex: 0));
   }
 }
+
+/// The skips back / forward the pretend player was asked for (cleared by each pumpDesktop).
+final skipsAsked = <Duration>[];
 
 bool _ready = false;
 
@@ -125,6 +130,7 @@ Future<GoRouter> pumpDesktop(
     ...extraPrefs,
   });
   prefs = await SharedPreferences.getInstance();
+  skipsAsked.clear();
   serverMode = server;
   t.view.physicalSize = size;
   t.view.devicePixelRatio = 1;
