@@ -173,18 +173,23 @@ The Windows app can only be built on Windows (Flutter, Visual Studio's C++ tools
 `powershell -File tools\windows\build.ps1` makes the setup program and the portable zip in `dist\`.
 
 GitHub Actions builds everything (`.github/workflows/desktop.yml`): every Linux package is installed in a
-clean Debian, Arch or Fedora container and started before anything is attached, and the Windows setup program
-is installed and started on a Windows runner. Pushing a `v*` tag attaches all the files to that release (made
-as a draft if it isn't there yet); "Run workflow" on the Actions page builds them without releasing.
+clean Debian, Arch or Fedora container and started before anything is attached; the Flatpak is built from the
+Linux archive with `tools/flatpak/build.sh` in Flathub's builder image, then installed and started there; and
+the Windows setup program is installed and started on a Windows runner. Pushing a `v*` tag attaches all the
+files, the `.flatpak` too (Encore updates a Flatpak copy from it), to that release (made as a draft if it isn't
+there yet); "Run workflow" on the Actions page builds them without releasing.
 `tools/release/upload.sh v<version> <files>` attaches files by hand and keeps the release's `SHA256SUMS.txt`
 whole. Keep `lib/version.dart` in step with `version:` in `pubspec.yaml`.
 
-The Flatpak isn't built by Actions: once a tag's builds are attached, build it from that release's Linux archive
-and attach it to the release here and on the phone app's (Encore updates a Flatpak copy from the `.flatpak` file):
+libmpv and the Flatpak's other libraries are kept in Actions' cache, so a release only builds them again when
+their part of `tools/flatpak/dev.safro.encore.yml` or the GNOME SDK changes; a weekly run keeps that cache (it
+builds only the Flatpak, from the latest release's archive, and attaches nothing).
+
+To build the Flatpak here instead, from a release's Linux archive:
 
 ```bash
 tools/flatpak/build.sh encore-<version>-linux-x86_64.tar.gz
-tools/release/upload.sh v<version> dist/encore-<version>-x86_64.flatpak
+tools/release/upload.sh v<version> dist/encore-<version>-x86_64.flatpak   # only if Actions didn't attach it
 ```
 
 ## Layout
