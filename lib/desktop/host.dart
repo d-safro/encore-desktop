@@ -118,4 +118,11 @@ class DesktopUpdater extends core.UpdateInstaller {
   @override
   Future<void> install(File file) =>
       Platform.isWindows ? updater.installWindowsUpdate(file) : updater.installDesktopUpdate(file);
+
+  @override
+  Future<bool> canInstallPackage(String kind) async =>
+      Platform.isLinux && updater.pkexec() != null && updater.packageInstallCommand(kind, '/x') != null;
+
+  @override
+  Future<void> installPackage(File file, String kind) => updater.installSystemPackage(file, kind);
 }

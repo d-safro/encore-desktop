@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:encore_core/core/host.dart' as core show PackageInstallCancelled;
 import 'package:encore_core/core/settings.dart' show appVersion;
 
 /// The desktop app putting a downloaded update in place (see DesktopUpdater in host.dart). Finding and
@@ -58,4 +59,37 @@ Future<void> installWindowsUpdate(File setup) async {
     ['/SILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CLOSEAPPLICATIONS', '/launch=1'],
     mode: ProcessStartMode.detached,
   );
+}
+
+/// The system's password window, for installing a package as root: pkexec (polkit), which every desktop has an agent
+/// for. Without it the update is shown as a command to run instead.
+String? pkexec() => ['/usr/bin/pkexec', '/bin/pkexec'].where((p) => File(p).existsSync()).firstOrNull;
+
+/// The package manager command that installs the local package file [path] of [kind] (deb, rpm, arch), or null.
+List<String>? packageInstallCommand(String kind, String path, {bool Function(String) exists = _exists}) => switch (kind) {
+  'deb' => ['apt-get', 'install', '-y', path],
+  'arch' => ['pacman', '-U', '--noconfirm', path],
+  // Fedora's dnf, else openSUSE's zypper (the package isn't signed: the release's checksum was checked instead)
+  _ when exists('/usr/bin/dnf') || exists('/usr/bin/dnf5') => ['dnf', 'install', '-y', path],
+  _ when exists('/usr/bin/zypper') => ['zypper', '--non-interactive', 'install', '--allow-unsigned-rpm', path],
+  _ => null,
+};
+
+bool _exists(String p) => File(p).existsSync();
+
+/// Installs the downloaded package with the system's package manager, as root through pkexec (the system asks for
+/// your password in its own window), then starts the new version once this one has quit (the caller quits).
+Future<void> installSystemPackage(File package, String kind) async {
+  final px = pkexec();
+  final cmd = packageInstallCommand(kind, package.path);
+  if (px == null || cmd == null) throw const FileSystemException('No way to install packages here');
+  final r = await Process.run(px, cmd);
+  // 126: the password window was closed (or the password refused three times); 127: not allowed at all
+  if (r.exitCode == 126 || r.exitCode == 127) throw const core.PackageInstallCancelled();
+  if (r.exitCode != 0) {
+    final err = '${r.stderr}'.trim().split('\n').where((l) => l.trim().isNotEmpty).toList();
+    throw FileSystemException(err.isEmpty ? '${cmd.first} failed (${r.exitCode})' : err.last);
+  }
+  // the package put the new version where this one runs from (a running program keeps its old files open)
+  await Process.start('sh', ['-c', restartScript, Platform.resolvedExecutable, '$pid'], mode: ProcessStartMode.detached);
 }
