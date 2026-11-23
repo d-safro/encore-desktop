@@ -37,7 +37,10 @@ void main() {
     expect(linuxPackageKind(root: dir.path), 'flatpak');
     expect(flatpakInstallation(info: info.path), '--user');
     info.writeAsStringSync('[Instance]\napp-path=/var/lib/flatpak/app/dev.safro.encore/x86_64/master/abc/files\n');
-    expect(flatpakInstallation(info: info.path), '--system');
+    expect(flatpakInstallation(info: info.path, home: '/home/me'), '--system');
+    // your own installation moved with XDG_DATA_HOME: still --user, not a second copy for everyone
+    info.writeAsStringSync('[Instance]\napp-path=/home/me/.data/flatpak/app/dev.safro.encore/x86_64/master/abc/files\n');
+    expect(flatpakInstallation(info: info.path, home: '/home/me'), '--user');
     expect(packageInstallCommand('flatpak', '/c/u.flatpak', installation: '--user'),
         ['flatpak-spawn', '--host', 'flatpak', 'install', '--user', '-y', '/c/u.flatpak']);
     // a system-wide copy: the system's password window may come up (--noninteractive would forbid it)

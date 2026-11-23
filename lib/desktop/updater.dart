@@ -69,11 +69,14 @@ String? pkexec() => ['/usr/bin/pkexec', '/bin/pkexec'].where((p) => File(p).exis
 bool inFlatpak({String info = '/.flatpak-info'}) => File(info).existsSync();
 
 /// Which installation this Flatpak is in, as `flatpak install` takes it: --user (~/.local/share/flatpak, no
-/// password) or --system (for everyone; the system asks for your password).
-String flatpakInstallation({String info = '/.flatpak-info'}) {
+/// password) or --system (for everyone; the system asks for your password). A user installation is always in your
+/// home folder (also when XDG_DATA_HOME moves it), a system one never is.
+String flatpakInstallation({String info = '/.flatpak-info', String? home}) {
   try {
     final line = File(info).readAsLinesSync().where((l) => l.startsWith('app-path=')).firstOrNull ?? '';
-    return line.contains('/.local/share/flatpak/') ? '--user' : '--system';
+    final h = home ?? Platform.environment['HOME'] ?? '';
+    final mine = line.contains('/.local/share/flatpak/') || (h.length > 1 && line.startsWith('app-path=$h/'));
+    return mine ? '--user' : '--system';
   } catch (_) {
     return '--user';
   }
