@@ -97,4 +97,48 @@ void main() {
     await expectLater(oneInstallAtATime(() async => throw const FileSystemException('disk full')), throwsA(isA<FileSystemException>()));
     await oneInstallAtATime(() async {}); // and once it failed
   });
+
+  group('the home-folder copy swapped for the new version', () {
+    late Directory tmp, dir;
+    setUp(() {
+      tmp = Directory.systemTemp.createTempSync('swap');
+      dir = Directory('${tmp.path}/encore')..createSync();
+      File('${dir.path}/encore').writeAsStringSync('old');
+    });
+    tearDown(() => tmp.deleteSync(recursive: true));
+
+    test('the new version takes its place', () async {
+      if (!Platform.isLinux) return;
+      final src = Directory('${tmp.path}/src/encore-9.0.0-linux-x86_64/app')..createSync(recursive: true);
+      File('${src.path}/encore').writeAsStringSync('new');
+      final tarball = '${tmp.path}/encore-9.0.0-linux-x86_64.tar.gz';
+      expect((await Process.run('tar', ['-czf', tarball, '-C', '${tmp.path}/src', '.'])).exitCode, 0);
+      await installDesktopUpdate(File(tarball), into: dir, restart: false);
+      expect(File('${dir.path}/encore').readAsStringSync(), 'new');
+      expect(File('${dir.path}/.encore-install').existsSync(), isTrue);
+      expect(File('${dir.path}.old/encore').readAsStringSync(), 'old');
+      expect(Directory('${dir.path}.new').existsSync(), isFalse);
+    });
+
+    test("when the new version can't be moved in, the old one is put back", () async {
+      final fresh = Directory('${tmp.path}/fresh')..createSync();
+      File('${fresh.path}/encore').writeAsStringSync('new');
+      Future<void> move(Directory d, String to) async {
+        if (d.path == fresh.path) throw const FileSystemException('Permission denied');
+        await d.rename(to);
+      }
+
+      await expectLater(swapInstall(dir, fresh, move: move),
+          throwsA(isA<FileSystemException>().having((e) => e.message, 'message', contains('still installed'))));
+      expect(File('${dir.path}/encore').readAsStringSync(), 'old');
+      expect(Directory('${dir.path}.old').existsSync(), isFalse);
+    });
+
+    test('a broken archive leaves the copy as it was', () async {
+      final bad = File('${tmp.path}/bad.tar.gz')..writeAsStringSync('not an archive');
+      await expectLater(installDesktopUpdate(bad, into: dir, restart: false), throwsA(isA<FileSystemException>()));
+      expect(File('${dir.path}/encore').readAsStringSync(), 'old');
+      expect(Directory('${dir.path}.new').existsSync(), isFalse);
+    });
+  });
 }

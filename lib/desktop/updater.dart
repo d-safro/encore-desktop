@@ -17,31 +17,53 @@ Directory? desktopInstallDir() {
 }
 
 /// Unpacks the downloaded .tar.gz next to the running app and swaps the folders; the new version starts a
-/// moment after this one quits.
-Future<void> installDesktopUpdate(File tarball) async {
-  final dir = desktopInstallDir();
+/// moment after this one quits. [into]: the folder to update (the running app's, see desktopInstallDir); [restart]:
+/// whether to start the new version once this one has quit.
+Future<void> installDesktopUpdate(File tarball, {Directory? into, bool restart = true}) async {
+  final dir = into ?? desktopInstallDir();
   if (dir == null) throw const FileSystemException('Encore is installed by the system here: update it with its package manager');
   final staging = Directory('${dir.path}.new');
   if (await staging.exists()) await staging.delete(recursive: true);
   await staging.create(recursive: true);
-  final r = await Process.run('tar', ['-xzf', tarball.path, '-C', staging.path]);
-  if (r.exitCode != 0) throw FileSystemException("Couldn't unpack the update: ${r.stderr}");
-  // the archive holds encore-<version>-linux-<arch>/app/…
-  final app = (await staging.list(recursive: true).toList())
-      .whereType<File>()
-      .where((e) => e.path.endsWith('/app/encore'))
-      .firstOrNull;
-  if (app == null) throw const FormatException("The update doesn't contain the app");
-  await File('${app.parent.path}/.encore-install').writeAsString('$appVersion\n');
-  final old = Directory('${dir.path}.old');
-  if (await old.exists()) await old.delete(recursive: true);
-  await dir.rename(old.path); // the running app keeps its open files
-  await app.parent.rename(dir.path);
-  await staging.delete(recursive: true);
+  try {
+    final r = await Process.run('tar', ['-xzf', tarball.path, '-C', staging.path]);
+    if (r.exitCode != 0) throw FileSystemException("Couldn't unpack the update: ${r.stderr}");
+    // the archive holds encore-<version>-linux-<arch>/app/…
+    final app = (await staging.list(recursive: true).toList())
+        .whereType<File>()
+        .where((e) => e.path.endsWith('/app/encore'))
+        .firstOrNull;
+    if (app == null) throw const FormatException("The update doesn't contain the app");
+    await File('${app.parent.path}/.encore-install').writeAsString('$appVersion\n');
+    await swapInstall(dir, app.parent);
+  } finally {
+    if (await staging.exists()) await staging.delete(recursive: true).catchError((_) => staging);
+  }
+  if (!restart) return;
   // the new version starts once this one has ended: while it runs, a new copy would only bring this
   // window up and exit (only one Encore runs at a time). The caller quits; given up after a minute.
   await Process.start('sh', ['-c', restartScript, '${dir.path}/encore', '$pid'], mode: ProcessStartMode.detached);
 }
+
+/// Puts [fresh] where [dir] is, the old one moved aside to `<dir>.old` (the running app keeps its open files). When
+/// the new one can't be moved in, the old one is put back and the error is thrown: Encore is never left missing.
+Future<void> swapInstall(Directory dir, Directory fresh, {Future<void> Function(Directory, String) move = _move}) async {
+  final old = Directory('${dir.path}.old');
+  if (await old.exists()) await old.delete(recursive: true);
+  await move(dir, old.path);
+  try {
+    await move(fresh, dir.path);
+  } catch (e) {
+    try {
+      await move(old, dir.path);
+    } catch (_) {
+      throw FileSystemException("Couldn't put the new version in place ($e), nor this one back: it's in ${old.path}");
+    }
+    throw FileSystemException("Couldn't put the new version in place ($e). This version is still installed");
+  }
+}
+
+Future<void> _move(Directory d, String to) => d.rename(to);
 
 // One install at a time: a second would unpack into the folder the first is swapping in, or overwrite the
 // Flatpak bundle it's installing.
