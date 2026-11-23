@@ -30,7 +30,13 @@ void main() {
     info.writeAsStringSync('[Instance]\napp-path=/var/lib/flatpak/app/dev.safro.encore/x86_64/master/abc/files\n');
     expect(flatpakInstallation(info: info.path), '--system');
     expect(packageInstallCommand('flatpak', '/c/u.flatpak', installation: '--user'),
-        ['flatpak-spawn', '--host', 'flatpak', 'install', '--user', '-y', '--noninteractive', '/c/u.flatpak']);
+        ['flatpak-spawn', '--host', 'flatpak', 'install', '--user', '-y', '/c/u.flatpak']);
+    // a system-wide copy: the system's password window may come up (--noninteractive would forbid it)
+    expect(packageInstallCommand('flatpak', '/c/u.flatpak', installation: '--system'), isNot(contains('--noninteractive')));
+    // the password window closed
+    expect(flatpakRefused(['error: Failed to install dev.safro.encore: Flatpak system operation InstallBundle not allowed for user']),
+        isTrue);
+    expect(flatpakRefused(['error: No space left on device']), isFalse);
   });
 
   test('the release\'s .flatpak is the update for a Flatpak copy', () {

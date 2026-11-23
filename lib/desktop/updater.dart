@@ -82,7 +82,8 @@ String flatpakInstallation({String info = '/.flatpak-info'}) {
 /// The package manager command that installs the local package file [path] of [kind] (deb, rpm, arch, flatpak),
 /// or null. A Flatpak's is run on the computer, outside the sandbox (flatpak-spawn --host).
 List<String>? packageInstallCommand(String kind, String path, {bool Function(String) exists = _exists, String? installation}) => switch (kind) {
-  'flatpak' => ['flatpak-spawn', '--host', 'flatpak', 'install', installation ?? flatpakInstallation(), '-y', '--noninteractive', path],
+  // (not --noninteractive: that also turns off the system's password window, so a system-wide copy could never update)
+  'flatpak' => ['flatpak-spawn', '--host', 'flatpak', 'install', installation ?? flatpakInstallation(), '-y', path],
   'deb' => ['apt-get', 'install', '-y', path],
   'arch' => ['pacman', '-U', '--noconfirm', path],
   // Fedora's dnf, else openSUSE's zypper (the package isn't signed: the release's checksum was checked instead)
@@ -123,8 +124,7 @@ Future<void> _installFlatpak(File bundle) async {
     final r = await Process.run(cmd.first, cmd.sublist(1));
     if (r.exitCode != 0) {
       final err = '${r.stderr}'.trim().split('\n').where((l) => l.trim().isNotEmpty).toList();
-      // a system-wide copy: the password window was closed
-      if (err.any((l) => l.contains('Not authorized') || l.contains('dismissed'))) throw const core.PackageInstallCancelled();
+      if (flatpakRefused(err)) throw const core.PackageInstallCancelled();
       throw FileSystemException(err.isEmpty ? 'flatpak failed (${r.exitCode})' : err.last);
     }
   } finally {
@@ -133,6 +133,11 @@ Future<void> _installFlatpak(File bundle) async {
   final id = Platform.environment['FLATPAK_ID'] ?? 'dev.safro.encore';
   await Process.start('flatpak-spawn', ['--host', 'sh', '-c', flatpakRestartScript, id], mode: ProcessStartMode.detached);
 }
+
+/// A system-wide copy's update was refused: the password window was closed, or the password not given (flatpak's
+/// system helper says "Flatpak system operation InstallBundle not allowed for user").
+bool flatpakRefused(List<String> stderr) =>
+    stderr.any((l) => l.contains('not allowed for user') || l.contains('Not authorized'));
 
 /// Run on the computer: waits (up to a minute) for the app given first to have no copy running, then starts it.
 const flatpakRestartScript =
