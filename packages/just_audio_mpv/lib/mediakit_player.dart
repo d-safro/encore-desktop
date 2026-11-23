@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' show pow;
 
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
@@ -292,7 +293,14 @@ class MediaKitPlayer extends AudioPlayerPlatform {
   }
 
   /// This player's volume times the app's volume.
-  Future<void> applyVolume() => _player.setVolume((_volume * JustAudioMpv.masterVolume * 100).clamp(0, 100));
+  Future<void> applyVolume() => _player.setVolume(mpvVolume(_volume, JustAudioMpv.masterVolume));
+
+  /// mpv's volume (0..100) for a player volume and the app's volume. mpv's volume is cubic: 50 % is a gain of
+  /// 0.125 (−18 dB). just_audio's volume is linear, as on Android, and Encore sets it to exact levels (ReplayGain:
+  /// −6 dB is 0.5; crossfades; the dip under the DJ), so it goes in as its cube root and comes out as asked. The app's
+  /// own volume stays as mpv has it (a slider that feels even all the way).
+  static double mpvVolume(double volume, double master) =>
+      (pow(volume.clamp(0.0, 1.0), 1 / 3) * master.clamp(0.0, 1.0) * 100).toDouble();
 
   /// The filter chain mpv runs: pitch, then the shared filters, then the extra gain.
   static String filterChain(String shared, double pitch, double gainDb) {
