@@ -124,7 +124,7 @@ class DesktopUpdater extends core.UpdateInstaller {
       ? false
       : kind == 'flatpak'
       ? updater.inFlatpak() && File('/usr/bin/flatpak-spawn').existsSync()
-      : updater.pkexec() != null && updater.packageInstallCommand(kind, '/x') != null;
+      : updater.runsFromSystemPackage() && updater.pkexec() != null && updater.packageInstallCommand(kind, '/x') != null;
 
   @override
   Future<void> installPackage(File file, String kind) => updater.installSystemPackage(file, kind);

@@ -295,5 +295,15 @@ void main() {
       expect(e, contains('Exec="/home/me/.local/share/encore/app/encore" --hidden'));
       expect(e, contains('Icon=dev.safro.encore'));
     });
+
+    test('the Flatpak\'s autostart entry is where the desktop reads it, and starts the Flatpak', () {
+      const env = {'HOME': '/home/me', 'XDG_CONFIG_HOME': '/home/me/.var/app/dev.safro.encore/config'};
+      expect(autostartFolder(env, flatpak: true), '/home/me/.config/autostart');
+      expect(autostartFolder(env, flatpak: false), '/home/me/.var/app/dev.safro.encore/config/autostart');
+      expect(autostartFolder({'HOME': '/home/me'}, flatpak: false), '/home/me/.config/autostart');
+      final e = autostartEntry('/app/lib/encore/encore', flatpak: true);
+      expect(e, contains('Exec=flatpak run dev.safro.encore --hidden'));
+      expect(e, isNot(contains('/app/')));
+    });
   });
 }

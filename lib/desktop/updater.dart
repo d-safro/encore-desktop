@@ -61,6 +61,11 @@ Future<void> installWindowsUpdate(File setup) async {
   );
 }
 
+/// pkexec ended without running the package manager because you said no: 126, the password window was closed; 127
+/// "Not authorized", the password refused. Its other 127 (no password window on this desktop: "No authentication
+/// agent found") is a failure, so the terminal command is shown instead.
+bool pkexecRefused(int exitCode, String stderr) => exitCode == 126 || (exitCode == 127 && stderr.contains('Not authorized'));
+
 /// The system's password window, for installing a package as root: pkexec (polkit), which every desktop has an agent
 /// for. Without it the update is shown as a command to run instead.
 String? pkexec() => ['/usr/bin/pkexec', '/bin/pkexec'].where((p) => File(p).existsSync()).firstOrNull;
@@ -69,11 +74,14 @@ String? pkexec() => ['/usr/bin/pkexec', '/bin/pkexec'].where((p) => File(p).exis
 bool inFlatpak({String info = '/.flatpak-info'}) => File(info).existsSync();
 
 /// Which installation this Flatpak is in, as `flatpak install` takes it: --user (~/.local/share/flatpak, no
-/// password) or --system (for everyone; the system asks for your password).
-String flatpakInstallation({String info = '/.flatpak-info'}) {
+/// password) or --system (for everyone; the system asks for your password). A user installation is always in your
+/// home folder (also when XDG_DATA_HOME moves it), a system one never is.
+String flatpakInstallation({String info = '/.flatpak-info', String? home}) {
   try {
     final line = File(info).readAsLinesSync().where((l) => l.startsWith('app-path=')).firstOrNull ?? '';
-    return line.contains('/.local/share/flatpak/') ? '--user' : '--system';
+    final h = home ?? Platform.environment['HOME'] ?? '';
+    final mine = line.contains('/.local/share/flatpak/') || (h.length > 1 && line.startsWith('app-path=$h/'));
+    return mine ? '--user' : '--system';
   } catch (_) {
     return '--user';
   }
@@ -82,7 +90,8 @@ String flatpakInstallation({String info = '/.flatpak-info'}) {
 /// The package manager command that installs the local package file [path] of [kind] (deb, rpm, arch, flatpak),
 /// or null. A Flatpak's is run on the computer, outside the sandbox (flatpak-spawn --host).
 List<String>? packageInstallCommand(String kind, String path, {bool Function(String) exists = _exists, String? installation}) => switch (kind) {
-  'flatpak' => ['flatpak-spawn', '--host', 'flatpak', 'install', installation ?? flatpakInstallation(), '-y', '--noninteractive', path],
+  // (not --noninteractive: that also turns off the system's password window, so a system-wide copy could never update)
+  'flatpak' => ['flatpak-spawn', '--host', 'flatpak', 'install', installation ?? flatpakInstallation(), '-y', path],
   'deb' => ['apt-get', 'install', '-y', path],
   'arch' => ['pacman', '-U', '--noconfirm', path],
   // Fedora's dnf, else openSUSE's zypper (the package isn't signed: the release's checksum was checked instead)
@@ -93,6 +102,14 @@ List<String>? packageInstallCommand(String kind, String path, {bool Function(Str
 
 bool _exists(String p) => File(p).existsSync();
 
+/// This copy is the one a .deb, RPM or Arch package put in place (/usr/lib/encore, or /usr/lib64/encore for the
+/// RPM). A copy run from anywhere else (unpacked by hand, a build) isn't updated with the package manager: that
+/// would install the package beside it and start this old copy again.
+bool runsFromSystemPackage({String? exe}) {
+  final dir = File(exe ?? Platform.resolvedExecutable).parent.path;
+  return dir == '/usr/lib/encore' || dir == '/usr/lib64/encore';
+}
+
 /// Installs the downloaded package with the system's package manager, as root through pkexec (the system asks for
 /// your password in its own window), then starts the new version once this one has quit (the caller quits).
 Future<void> installSystemPackage(File package, String kind) async {
@@ -101,8 +118,7 @@ Future<void> installSystemPackage(File package, String kind) async {
   final cmd = packageInstallCommand(kind, package.path);
   if (px == null || cmd == null) throw const FileSystemException('No way to install packages here');
   final r = await Process.run(px, cmd);
-  // 126: the password window was closed (or the password refused three times); 127: not allowed at all
-  if (r.exitCode == 126 || r.exitCode == 127) throw const core.PackageInstallCancelled();
+  if (pkexecRefused(r.exitCode, '${r.stderr}')) throw const core.PackageInstallCancelled();
   if (r.exitCode != 0) {
     final err = '${r.stderr}'.trim().split('\n').where((l) => l.trim().isNotEmpty).toList();
     throw FileSystemException(err.isEmpty ? '${cmd.first} failed (${r.exitCode})' : err.last);
@@ -123,8 +139,7 @@ Future<void> _installFlatpak(File bundle) async {
     final r = await Process.run(cmd.first, cmd.sublist(1));
     if (r.exitCode != 0) {
       final err = '${r.stderr}'.trim().split('\n').where((l) => l.trim().isNotEmpty).toList();
-      // a system-wide copy: the password window was closed
-      if (err.any((l) => l.contains('Not authorized') || l.contains('dismissed'))) throw const core.PackageInstallCancelled();
+      if (flatpakRefused(err)) throw const core.PackageInstallCancelled();
       throw FileSystemException(err.isEmpty ? 'flatpak failed (${r.exitCode})' : err.last);
     }
   } finally {
@@ -133,6 +148,11 @@ Future<void> _installFlatpak(File bundle) async {
   final id = Platform.environment['FLATPAK_ID'] ?? 'dev.safro.encore';
   await Process.start('flatpak-spawn', ['--host', 'sh', '-c', flatpakRestartScript, id], mode: ProcessStartMode.detached);
 }
+
+/// A system-wide copy's update was refused: the password window was closed, or the password not given (flatpak's
+/// system helper says "Flatpak system operation InstallBundle not allowed for user").
+bool flatpakRefused(List<String> stderr) =>
+    stderr.any((l) => l.contains('not allowed for user') || l.contains('Not authorized'));
 
 /// Run on the computer: waits (up to a minute) for the app given first to have no copy running, then starts it.
 const flatpakRestartScript =

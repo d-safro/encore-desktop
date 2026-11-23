@@ -16,6 +16,23 @@ void main() {
     expect(packageInstallCommand('rpm', '/u/e.rpm', exists: none), isNull);
   });
 
+  test('a closed password window is "cancelled"; a desktop without one gets the terminal command', () {
+    expect(pkexecRefused(126, ''), isTrue);
+    expect(pkexecRefused(127, 'Error executing command as another user: Not authorized\n\nThis incident has been reported.\n'),
+        isTrue);
+    expect(pkexecRefused(127, 'Error executing command as another user: No authentication agent found.\n'), isFalse);
+    expect(pkexecRefused(100, 'E: Unable to locate package'), isFalse);
+  });
+
+  test('only the copy a package installed is updated with the package manager', () {
+    expect(runsFromSystemPackage(exe: '/usr/lib/encore/encore'), isTrue); // .deb, Arch
+    expect(runsFromSystemPackage(exe: '/usr/lib64/encore/encore'), isTrue); // RPM
+    // unpacked by hand, or a build: dnf would install the RPM beside it and this old copy would start again
+    expect(runsFromSystemPackage(exe: '/home/me/Downloads/encore-1.12.0-linux-x86_64/app/encore'), isFalse);
+    expect(runsFromSystemPackage(exe: '/home/me/src/encore-desktop/build/linux/x64/release/bundle/encore'), isFalse);
+    expect(runsFromSystemPackage(exe: '/opt/encore/encore'), isFalse);
+  });
+
   test('a Flatpak is updated by the computer\'s flatpak, in the installation it came from', () {
     final dir = Directory.systemTemp.createTempSync('fp');
     addTearDown(() => dir.deleteSync(recursive: true));
@@ -28,9 +45,18 @@ void main() {
     expect(linuxPackageKind(root: dir.path), 'flatpak');
     expect(flatpakInstallation(info: info.path), '--user');
     info.writeAsStringSync('[Instance]\napp-path=/var/lib/flatpak/app/dev.safro.encore/x86_64/master/abc/files\n');
-    expect(flatpakInstallation(info: info.path), '--system');
+    expect(flatpakInstallation(info: info.path, home: '/home/me'), '--system');
+    // your own installation moved with XDG_DATA_HOME: still --user, not a second copy for everyone
+    info.writeAsStringSync('[Instance]\napp-path=/home/me/.data/flatpak/app/dev.safro.encore/x86_64/master/abc/files\n');
+    expect(flatpakInstallation(info: info.path, home: '/home/me'), '--user');
     expect(packageInstallCommand('flatpak', '/c/u.flatpak', installation: '--user'),
-        ['flatpak-spawn', '--host', 'flatpak', 'install', '--user', '-y', '--noninteractive', '/c/u.flatpak']);
+        ['flatpak-spawn', '--host', 'flatpak', 'install', '--user', '-y', '/c/u.flatpak']);
+    // a system-wide copy: the system's password window may come up (--noninteractive would forbid it)
+    expect(packageInstallCommand('flatpak', '/c/u.flatpak', installation: '--system'), isNot(contains('--noninteractive')));
+    // the password window closed
+    expect(flatpakRefused(['error: Failed to install dev.safro.encore: Flatpak system operation InstallBundle not allowed for user']),
+        isTrue);
+    expect(flatpakRefused(['error: No space left on device']), isFalse);
   });
 
   test('the release\'s .flatpak is the update for a Flatpak copy', () {

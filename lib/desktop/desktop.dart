@@ -30,6 +30,10 @@ import 'package:encore_core/playback/handler.dart';
 String scrubLogin(String text) =>
     text.replaceAllMapped(RegExp(r'([?&](?:u|t|s|p|apiKey)=)[^&\s]*'), (m) => '${m[1]}…');
 
+/// Encore's MPRIS name: `org.mpris.MediaPlayer2.encore.instance<pid>` (audio_service_mpris adds the instance; in
+/// the Flatpak the pid is the sandbox's, so tools/flatpak/dev.safro.encore.yml allows the whole family).
+const mprisName = 'encore';
+
 /// Before anything opens a database or a player (main() calls this first).
 Future<void> initDesktopPlatform() async {
   localSource = DesktopFolderSource(); // music in the folders you pick (Settings > Music on this computer)
@@ -46,7 +50,7 @@ Future<void> initDesktopPlatform() async {
   if (!Platform.isLinux) return;
   // Plasma's media controls, lock screen, media keys and KDE Connect talk to Encore through MPRIS
   AudioServiceMpris.init(
-    dBusName: 'encore',
+    dBusName: mprisName,
     identity: 'Encore',
     desktopEntry: 'dev.safro.encore',
     canControl: true,

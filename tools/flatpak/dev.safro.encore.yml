@@ -19,6 +19,8 @@ finish-args:
   - --filesystem=xdg-music:ro
   # Pictures and lyrics cards you save go to Downloads
   - --filesystem=xdg-download
+  # Settings › Desktop › Start when you log in: the desktop's autostart entry (~/.config/autostart)
+  - --filesystem=xdg-config/autostart:create
   # The server password, in the desktop's keyring (Secret Service)
   - --talk-name=org.freedesktop.secrets
   # Whether the computer is online (NetworkManager, on the system bus)
@@ -29,8 +31,9 @@ finish-args:
   # in the sandbox
   - --talk-name=org.kde.StatusNotifierWatcher
   - --own-name=org.kde.StatusNotifierItem-2-1
-  # Media keys, the desktop's media controls and KDE Connect (MPRIS)
-  - --own-name=org.mpris.MediaPlayer2.encore
+  # Media keys, the desktop's media controls and KDE Connect (MPRIS): the name is
+  # org.mpris.MediaPlayer2.encore.instance<pid>, and a name it may not own stops the player from starting
+  - --own-name=org.mpris.MediaPlayer2.encore.*
   # One-button updates: the new .flatpak is installed by the host's flatpak (Settings › Check now)
   - --talk-name=org.freedesktop.Flatpak
 

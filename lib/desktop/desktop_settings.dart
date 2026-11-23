@@ -8,12 +8,20 @@ import 'local_folders_settings.dart';
 
 import 'desktop.dart';
 import 'shortcuts.dart';
+import 'updater.dart' show inFlatpak;
 
 /// Start Encore when you log in (in the tray, no window): a standard XDG autostart entry on Linux, only
 /// while this switch is on.
 File _autostartFile() =>
-    File(p.join(Platform.environment['XDG_CONFIG_HOME'] ?? p.join(Platform.environment['HOME'] ?? '', '.config'),
-        'autostart', 'dev.safro.encore.desktop'));
+    File(p.join(autostartFolder(Platform.environment, flatpak: inFlatpak()), 'dev.safro.encore.desktop'));
+
+/// Where the desktop looks for autostart entries. In the Flatpak, XDG_CONFIG_HOME is the sandbox's own folder,
+/// which the desktop never reads: the entry goes in your ~/.config/autostart (tools/flatpak allows it).
+String autostartFolder(Map<String, String> env, {required bool flatpak}) {
+  final home = env['HOME'] ?? '';
+  final config = flatpak ? null : env['XDG_CONFIG_HOME'];
+  return p.join(config == null || config.isEmpty ? p.join(home, '.config') : config, 'autostart');
+}
 
 // Windows keeps the same switch in the registry: the "Run" list of your own account.
 const _runKey = r'HKCU\Software\Microsoft\Windows\CurrentVersion\Run';
@@ -29,12 +37,13 @@ bool autostartOn() {
   return _autostartFile().existsSync();
 }
 
-/// The autostart entry's text for the app at [exe].
-String autostartEntry(String exe) => '''[Desktop Entry]
+/// The autostart entry's text for the app at [exe]. The Flatpak is started through flatpak: [exe] is a path in
+/// its sandbox, which the desktop doesn't have.
+String autostartEntry(String exe, {bool flatpak = false}) => '''[Desktop Entry]
 Type=Application
 Name=Encore
 Comment=Music from your Navidrome server
-Exec="$exe" --hidden
+Exec=${flatpak ? 'flatpak run dev.safro.encore --hidden' : '"$exe" --hidden'}
 Icon=dev.safro.encore
 X-KDE-autostart-phase=2
 X-GNOME-Autostart-enabled=true
@@ -50,7 +59,7 @@ Future<void> setAutostart(bool on) async {
   final f = _autostartFile();
   if (on) {
     await f.parent.create(recursive: true);
-    await f.writeAsString(autostartEntry(Platform.resolvedExecutable));
+    await f.writeAsString(autostartEntry(Platform.resolvedExecutable, flatpak: inFlatpak()));
   } else if (await f.exists()) {
     await f.delete();
   }
