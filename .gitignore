@@ -52,3 +52,4 @@ app.*.map.json
 
 # split.sh
 pubspec_overrides.yaml
+/tools/flatpak/.build-*.yml

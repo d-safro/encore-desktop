@@ -17,13 +17,19 @@ if [ -z "$archive" ]; then
 fi
 here=$root/tools/flatpak
 cp "$archive" "$here/encore-linux.tar.gz"
-trap 'rm -f "$here/encore-linux.tar.gz"' EXIT
+# flatpak-builder keeps a module built from a local file even when the file changed: with the archive's checksum in
+# the manifest, a new archive builds Encore's module again (libmpv and the rest stay cached)
+sum=$(sha256sum "$here/encore-linux.tar.gz" | cut -d' ' -f1)
+manifest=$here/.build-dev.safro.encore.yml
+trap 'rm -f "$here/encore-linux.tar.gz" "$manifest"' EXIT
+sed "s|^        path: encore-linux.tar.gz\$|        path: encore-linux.tar.gz\n        sha256: $sum|" "$here/dev.safro.encore.yml" > "$manifest"
+grep -q "sha256: $sum" "$manifest"
 if command -v flatpak-builder >/dev/null; then builder=(flatpak-builder)
 else builder=(flatpak run --no-documents-portal --filesystem="$root" org.flatpak.Builder); fi
 work=$root/build/flatpak
 mkdir -p "$work" dist
 "${builder[@]}" --force-clean --user --disable-rofiles-fuse --state-dir="$work/state" --repo="$work/repo" \
-  "$work/app" "$here/dev.safro.encore.yml"
+  "$work/app" "$manifest"
 flatpak build-bundle --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo \
   "$work/repo" "dist/encore-$version-x86_64.flatpak" dev.safro.encore
 (cd dist && sha256sum "encore-$version-x86_64.flatpak" > SHA256SUMS-flatpak.txt)
