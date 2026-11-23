@@ -94,6 +94,14 @@ List<String>? packageInstallCommand(String kind, String path, {bool Function(Str
 
 bool _exists(String p) => File(p).existsSync();
 
+/// This copy is the one a .deb, RPM or Arch package put in place (/usr/lib/encore, or /usr/lib64/encore for the
+/// RPM). A copy run from anywhere else (unpacked by hand, a build) isn't updated with the package manager: that
+/// would install the package beside it and start this old copy again.
+bool runsFromSystemPackage({String? exe}) {
+  final dir = File(exe ?? Platform.resolvedExecutable).parent.path;
+  return dir == '/usr/lib/encore' || dir == '/usr/lib64/encore';
+}
+
 /// Installs the downloaded package with the system's package manager, as root through pkexec (the system asks for
 /// your password in its own window), then starts the new version once this one has quit (the caller quits).
 Future<void> installSystemPackage(File package, String kind) async {

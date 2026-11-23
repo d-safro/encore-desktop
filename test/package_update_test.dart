@@ -16,6 +16,15 @@ void main() {
     expect(packageInstallCommand('rpm', '/u/e.rpm', exists: none), isNull);
   });
 
+  test('only the copy a package installed is updated with the package manager', () {
+    expect(runsFromSystemPackage(exe: '/usr/lib/encore/encore'), isTrue); // .deb, Arch
+    expect(runsFromSystemPackage(exe: '/usr/lib64/encore/encore'), isTrue); // RPM
+    // unpacked by hand, or a build: dnf would install the RPM beside it and this old copy would start again
+    expect(runsFromSystemPackage(exe: '/home/me/Downloads/encore-1.12.0-linux-x86_64/app/encore'), isFalse);
+    expect(runsFromSystemPackage(exe: '/home/me/src/encore-desktop/build/linux/x64/release/bundle/encore'), isFalse);
+    expect(runsFromSystemPackage(exe: '/opt/encore/encore'), isFalse);
+  });
+
   test('a Flatpak is updated by the computer\'s flatpak, in the installation it came from', () {
     final dir = Directory.systemTemp.createTempSync('fp');
     addTearDown(() => dir.deleteSync(recursive: true));
