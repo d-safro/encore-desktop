@@ -22,7 +22,11 @@
 - **Plays your library** from Conductor, Navidrome or any Subsonic / OpenSubsonic server, plus the music in folders on your computer (`~/Music` by default) and files you drop on the window.
 - **Everything the phone app has:**
   - downloads for offline, with lyrics;
-  - mixes, radio, Automix;
+  - Made for you, mixes, radio, Automix;
+  - songs you don't have (with Conductor): albums and artists show them (⬇), playing one fetches it into the
+    Temporary playlist, and a heart keeps it;
+  - sound levelling: songs play at the same loudness (ReplayGain; with Conductor also songs whose files don't say
+    how loud they are);
   - synced lyrics with translation;
   - stats and your year in review;
   - listening together;
@@ -175,6 +179,14 @@ as a draft if it isn't there yet); "Run workflow" on the Actions page builds the
 `tools/release/upload.sh v<version> <files>` attaches files by hand and keeps the release's `SHA256SUMS.txt`
 whole. Keep `lib/version.dart` in step with `version:` in `pubspec.yaml`.
 
+The Flatpak isn't built by Actions: once a tag's builds are attached, build it from that release's Linux archive
+and attach it to the release here and on the phone app's (Encore updates a Flatpak copy from the `.flatpak` file):
+
+```bash
+tools/flatpak/build.sh encore-<version>-linux-x86_64.tar.gz
+tools/release/upload.sh v<version> dist/encore-<version>-x86_64.flatpak
+```
+
 ## Layout
 
 ```
@@ -205,7 +217,7 @@ is in [encore-core](https://github.com/d-safro/encore-core), the `encore_core` p
   encore_core:
     git:
       url: https://github.com/d-safro/encore-core.git
-      ref: v1.0.0
+      ref: v1.7.0
 ```
 
 CI and release builds use that tag. To work on the shared code next to this app, clone both side by side
