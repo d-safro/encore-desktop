@@ -1,5 +1,6 @@
 // The desktop window's look and feel (the UI audit's changes), on the real shell and screens with a pretend
 // server and player (support/ui_rig.dart).
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/gestures.dart' show kSecondaryButton;
@@ -462,5 +463,57 @@ void main() {
   testWidgets('Library: the open tab is underlined, not a pill', (t) async {
     await pumpDesktop(t, '/library');
     expect(Theme.of(t.element(find.byType(TabBar))).tabBarTheme.indicator, isA<UnderlineTabIndicator>());
+  });
+
+  group('skip back / forward by seconds', () {
+    testWidgets('in the player bar, beside previous and next, by the setting\'s seconds', (t) async {
+      await pumpDesktop(t, '/home', extraPrefs: {
+        'settings': jsonEncode({...const Settings().toJson(), 'skipBack': 10, 'skipForward': 60}),
+      });
+      final back = find.byKey(const ValueKey('bar-skip-back'));
+      final forward = find.byKey(const ValueKey('bar-skip-forward'));
+      expect(find.byTooltip('Back 10 seconds (Shift+←)'), findsOneWidget);
+      expect(find.byTooltip('Forward 60 seconds (Shift+→)'), findsOneWidget);
+      // ⏮ ⟲ ⏯ ⟳ ⏭
+      final prev = find.byTooltip('Previous (Ctrl+←)'), next = find.byTooltip('Next (Ctrl+→)');
+      expect(t.getCenter(prev).dx, lessThan(t.getCenter(back).dx));
+      expect(t.getCenter(forward).dx, lessThan(t.getCenter(next).dx));
+      expect(t.getCenter(back).dy, closeTo(t.getCenter(next).dy, 1));
+      await t.tap(back);
+      await t.tap(forward);
+      // the keyboard's Shift+← / Shift+→ skip by the same seconds
+      await t.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await t.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await t.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await t.pump();
+      expect(skipsAsked, const [
+        Duration(seconds: -10),
+        Duration(seconds: 60),
+        Duration(seconds: 60),
+        Duration(seconds: -10),
+      ]);
+    });
+
+    testWidgets('none for music when only podcasts and audiobooks get them', (t) async {
+      await pumpDesktop(t, '/home', extraPrefs: {
+        'settings': jsonEncode({...const Settings().toJson(), 'skipButtons': 'spoken'}),
+      });
+      expect(find.byKey(const ValueKey('bar-skip-back')), findsNothing);
+      expect(find.byKey(const ValueKey('bar-skip-forward')), findsNothing);
+      expect(find.byTooltip('Previous (Ctrl+←)'), findsOneWidget);
+    });
+
+    testWidgets('the full player has them between the times under the seek bar', (t) async {
+      await pumpDesktop(t, '/player');
+      final back = find.byKey(const ValueKey('skip-back'));
+      final forward = find.byKey(const ValueKey('skip-forward'));
+      expect(find.byTooltip('Back 15 seconds'), findsOneWidget);
+      expect(find.byTooltip('Forward 30 seconds'), findsOneWidget);
+      expect(t.getSize(back).height, greaterThanOrEqualTo(48));
+      expect(t.getCenter(back).dx, lessThan(t.getCenter(forward).dx));
+      await t.tap(forward);
+      expect(skipsAsked, const [Duration(seconds: 30)]);
+    });
   });
 }

@@ -1,7 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+
+import 'package:encore_core/core/settings.dart';
+import 'package:encore_core/playback/skip.dart' show skipLabel;
 
 /// The desktop's keyboard shortcuts. Media keys (play, next…) come through MPRIS, so they work even when
 /// Encore isn't the active window.
@@ -18,8 +22,8 @@ final desktopShortcuts = <DesktopShortcut>[
   const DesktopShortcut('playPause', 'Space', 'Play / pause', [SingleActivator(LogicalKeyboardKey.space)]),
   const DesktopShortcut('next', 'Ctrl+→', 'Next song', [SingleActivator(LogicalKeyboardKey.arrowRight, control: _c)]),
   const DesktopShortcut('previous', 'Ctrl+←', 'Previous song', [SingleActivator(LogicalKeyboardKey.arrowLeft, control: _c)]),
-  const DesktopShortcut('forward', 'Shift+→', 'Forward 10 seconds', [SingleActivator(LogicalKeyboardKey.arrowRight, shift: true)]),
-  const DesktopShortcut('back', 'Shift+←', 'Back 10 seconds', [SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true)]),
+  const DesktopShortcut('forward', 'Shift+→', 'Skip forward', [SingleActivator(LogicalKeyboardKey.arrowRight, shift: true)]),
+  const DesktopShortcut('back', 'Shift+←', 'Skip back', [SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true)]),
   const DesktopShortcut('louder', 'Ctrl+↑', 'Louder', [SingleActivator(LogicalKeyboardKey.arrowUp, control: _c)]),
   const DesktopShortcut('quieter', 'Ctrl+↓', 'Quieter', [SingleActivator(LogicalKeyboardKey.arrowDown, control: _c)]),
   const DesktopShortcut('heart', 'Ctrl+L', 'Like the playing song', [SingleActivator(LogicalKeyboardKey.keyL, control: _c)]),
@@ -107,6 +111,14 @@ class DesktopShortcuts extends StatelessWidget {
   );
 }
 
+/// A shortcut's name in the help list: the skips say their seconds (Settings › Playback).
+String _labelOf(BuildContext context, DesktopShortcut s) {
+  if (s.id != 'forward' && s.id != 'back') return s.label;
+  final st = ProviderScope.containerOf(context, listen: false).read(settingsProvider);
+  final forward = s.id == 'forward';
+  return skipLabel(forward ? st.skipForward : st.skipBack, forward: forward);
+}
+
 Future<void> showShortcutsHelp(BuildContext context) => showDialog(
   context: context,
   useRootNavigator: true,
@@ -126,7 +138,7 @@ Future<void> showShortcutsHelp(BuildContext context) => showDialog(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
                     children: [
-                      Expanded(child: Text(s.label)),
+                      Expanded(child: Text(_labelOf(ctx, s))),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(

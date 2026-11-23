@@ -20,6 +20,7 @@ import 'package:encore_core/data/song_id.dart' show canIdentify;
 import '../playback/desktop_audio.dart';
 import 'package:encore_core/playback/handler.dart';
 import 'package:encore_core/playback/private_session.dart';
+import 'package:encore_core/playback/skip.dart' show skipShownFor;
 import 'package:encore_core/ui/actions.dart';
 import 'package:encore_core/ui/devices_sheet.dart';
 import 'package:encore_core/ui/screens/player.dart';
@@ -152,7 +153,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   void _run(String id) {
     final h = audioHandler;
     final song = h.currentSong;
-    final pos = h.player.position;
     switch (id) {
       case 'playPause':
         h.playbackState.value.playing ? h.pause() : h.play();
@@ -161,9 +161,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       case 'previous':
         h.skipToPrevious();
       case 'forward':
-        h.seek(pos + const Duration(seconds: 10));
+        h.fastForward(); // the seconds in Settings › Playback (past the end: the next song)
       case 'back':
-        h.seek(pos - const Duration(seconds: 10) < Duration.zero ? Duration.zero : pos - const Duration(seconds: 10));
+        h.rewind();
       case 'louder':
         setDesktopVolume((desktopVolume + 0.05).clamp(0, 1));
       case 'quieter':
@@ -576,6 +576,7 @@ class PlayerBar extends ConsumerWidget {
     final shuffle = audioHandler.shuffleKind;
     final repeat = st?.repeatMode ?? AudioServiceRepeatMode.none;
     Color on(bool v) => v ? cs.primary : cs.onSurfaceVariant;
+    final skip = skipShownFor(ref.watch(settingsProvider), item.id);
     return SizedBox(
       height: 84,
       child: Padding(
@@ -667,6 +668,7 @@ class PlayerBar extends ConsumerWidget {
                         icon: const Icon(Icons.skip_previous_rounded),
                         onPressed: audioHandler.skipToPrevious,
                       ),
+                      if (skip) const SkipButton(key: ValueKey('bar-skip-back'), forward: false, size: 22, shortcut: 'Shift+←'),
                       const SizedBox(width: 4),
                       SizedBox(
                         width: 40,
@@ -689,6 +691,7 @@ class PlayerBar extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 4),
+                      if (skip) const SkipButton(key: ValueKey('bar-skip-forward'), forward: true, size: 22, shortcut: 'Shift+→'),
                       IconButton(
                         tooltip: 'Next (Ctrl+→)',
                         icon: const Icon(Icons.skip_next_rounded),
