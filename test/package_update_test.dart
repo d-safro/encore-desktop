@@ -66,6 +66,7 @@ void main() {
     const u = UpdateInfo(version: '1.13.0', notes: '', apkUrl: '', apkName: '', size: 0, sumsUrl: '', pageUrl: '',
         flatpakUrl: 'https://x/encore-1.13.0-x86_64.flatpak');
     expect(systemPackageUrl(u, 'flatpak'), u.flatpakUrl);
-    expect(systemUpdateCommand(u, 'flatpak'), contains('flatpak install -y ./encore-1.13.0-x86_64.flatpak'));
+    expect(systemUpdateCommand(u, 'flatpak', flatpakInstallation: '--user'),
+        contains('flatpak install --user -y ./encore-1.13.0-x86_64.flatpak'));
   });
 }
