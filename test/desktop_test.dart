@@ -123,7 +123,9 @@ void main() {
     test('how a Linux package was installed', () async {
       final root = await Directory.systemTemp.createTemp('encore-pkg');
       addTearDown(() => root.delete(recursive: true));
-      expect(linuxPackageKind(root: root.path), 'rpm');
+      // the RPM's copy runs from /usr/lib64/encore; one unpacked by hand isn't the package manager's to update
+      expect(linuxPackageKind(root: root.path, exe: '/usr/lib64/encore/encore'), 'rpm');
+      expect(linuxPackageKind(root: root.path, exe: '/home/me/Downloads/encore-1.8.0-linux-x86_64/app/encore'), 'none');
       await Directory('${root.path}/var/lib/pacman/local/encore-bin-1.8.0-1').create(recursive: true);
       expect(linuxPackageKind(root: root.path), 'arch');
       await File('${root.path}/var/lib/dpkg/info/encore.list').create(recursive: true);

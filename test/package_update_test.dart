@@ -69,4 +69,20 @@ void main() {
     expect(systemUpdateCommand(u, 'flatpak', flatpakInstallation: '--user'),
         contains('flatpak install --user -y ./encore-1.13.0-x86_64.flatpak'));
   });
+
+  test("a copy unpacked by hand is sent to the release page, never told to run dnf (or apt)", () {
+    final root = Directory.systemTemp.createTempSync('kind');
+    addTearDown(() => root.deleteSync(recursive: true));
+    const exe = '/home/me/Downloads/encore-1.13.0-linux-x86_64/app/encore';
+    expect(linuxPackageKind(root: root.path, exe: exe), 'none');
+    const u = UpdateInfo(version: '1.13.0', notes: '', apkUrl: '', apkName: '', size: 0, sumsUrl: '', pageUrl: '',
+        rpmUrl: 'https://x/encore-1.13.0-1.x86_64.rpm', debUrl: 'https://x/encore_1.13.0_amd64.deb');
+    expect(systemUpdateCommand(u, 'none'), isNull);
+    expect(systemPackageUrl(u, 'none'), isNull);
+    // the packages' own copies keep their commands
+    expect(linuxPackageKind(root: root.path, exe: '/usr/lib64/encore/encore'), 'rpm');
+    expect(systemUpdateCommand(u, 'rpm'), 'sudo dnf install https://x/encore-1.13.0-1.x86_64.rpm');
+    File('${root.path}/var/lib/dpkg/info/encore.list').createSync(recursive: true);
+    expect(linuxPackageKind(root: root.path, exe: '/usr/lib/encore/encore'), 'deb');
+  });
 }
